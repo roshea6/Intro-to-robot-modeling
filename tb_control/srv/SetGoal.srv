@@ -1,0 +1,4 @@
+int64 dist
+int64 vel
+---
+int64 status
