@@ -1,4 +1,4 @@
 int64 dist
-int64 vel
+int64 time
 ---
-int64 status
+float64 status
