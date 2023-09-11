@@ -123,7 +123,7 @@ class VelPubNode(Node):
         # Ignore any other velocity profile definitions 
         else:
             self.get_logger().warn("Undefined velocity profile type. Service call ignored.")
-            response.status = 0
+            response.status = 0.0
             return response
 
 
