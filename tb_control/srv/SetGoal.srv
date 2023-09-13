@@ -1,5 +1,5 @@
-int64 dist
-int64 time
+float64 dist
+float64 time
 string profile "constant"
 ---
 float64 status

@@ -6,6 +6,7 @@ from geometry_msgs.msg import Twist
 
 import time
 import numpy as np
+import threading
 
 class VelPubNode(Node):
     def __init__(self):
@@ -32,7 +33,7 @@ class VelPubNode(Node):
         if request.profile == "constant":
             # Calculate the velocity required to cover the distance in the specified
             # amount of time
-            desired_vel = float(request.dist)/float(request.time)
+            desired_vel = request.dist/float(request.time)
 
             # Create a new twist message and populate it with the desired x velocity
             vel_msg = Twist()
@@ -41,9 +42,11 @@ class VelPubNode(Node):
             # Publish the message to the turtlebot
             self.vel_pub.publish(vel_msg)
 
-            # Sleep for the time it should take to get to the goal distance
-            # TODO: Find a way to do this with ROS time as they'll be different
-            time.sleep(request.time)
+        
+            # TODO: Ideally this would be done similar to how rospy.sleep() worked but 
+            # the rate replacment thing wasn't wokring nicely
+            # Run until we hit the desired time at that velocity
+            self.waitTime(request.time)
 
             # Create a new message with 0 velocity and publish
             vel_msg = Twist()
@@ -66,7 +69,12 @@ class VelPubNode(Node):
             # Really this generates like n-2 becaus the status and end point are included
             intermediate_vels = np.linspace(0, steady_vel, self.num_intermediate_vels + 2)
 
-            print(intermediate_vels)
+            # print(intermediate_vels)
+
+            # Calculate how much time should be spent at each intermediate vel
+            # accel_time should be percentage of total travel time and each intermediate 
+            # step should get an equal portion of that time for linear acceleration
+            intermediate_wait_time = (request.time * self.accel_time) / (self.num_intermediate_vels - 1)
 
             # Loop through the intermediate velocities, publish one, wait, then publish the next
             # until we've hit the steady state vel
@@ -75,16 +83,11 @@ class VelPubNode(Node):
                 vel_msg = Twist()
                 vel_msg.linear.x = vel
 
-                print(vel)
+                # print(vel)
 
                 self.vel_pub.publish(vel_msg)
 
-                # Calculate how much time should be spent at each intermediate vel
-                # accel_time should be percentage of total travel time and each intermediate 
-                # step should get an equal portion of that time for linear acceleration
-                wait_time = (request.time * self.accel_time) / (self.num_intermediate_vels - 1)
-
-                time.sleep(wait_time)
+                self.waitTime(intermediate_wait_time)
                 
             # STEADY STATE
             # Travel at the steady state speed until we hit the time where we need to begin decelerating
@@ -95,13 +98,14 @@ class VelPubNode(Node):
 
             # Steady vel time should be the total time - 2*accel_time to account for acceleration up
             # to steady and deceleration from steady state to 0
-            time.sleep(request.time*(1 - 2*self.accel_time))
+            steady_state_time = request.time*(1 - 2*self.accel_time)
+            self.waitTime(steady_state_time)
 
             # DECELERATION
             # Reverse the vel list and grab everything but the first
             intermediate_vels = list(reversed(intermediate_vels))
 
-            print(intermediate_vels)
+            # print(intermediate_vels)
 
             # Loop through the intermediate velocities backwards, publish one, wait, then publish the next
             # until we've hit 0
@@ -109,13 +113,11 @@ class VelPubNode(Node):
                 vel_msg = Twist()
                 vel_msg.linear.x = vel
 
-                print(vel)
+                # print(vel)
 
                 self.vel_pub.publish(vel_msg)
 
-                wait_time = (request.time * self.accel_time) / (self.num_intermediate_vels - 1)
-
-                time.sleep(wait_time)
+                self.waitTime(intermediate_wait_time)
 
             response.status = steady_vel
 
@@ -125,7 +127,13 @@ class VelPubNode(Node):
             self.get_logger().warn("Undefined velocity profile type. Service call ignored.")
             response.status = 0.0
             return response
-
+    
+    # Wait for the specified duration in seconds
+    def waitTime(self, duration):
+        start_time = self.get_clock().now()
+        # Multiply duration in 
+        while (self.get_clock().now() - start_time).nanoseconds < duration* (10**9):
+            pass
 
 def main():
     # Initialize the node
@@ -136,6 +144,7 @@ def main():
 
     # Start the node to run until it is killed
     rclpy.spin(vel_node)
+
 
     # Shutdown the node once it exits
     rclpy.shutdown()
