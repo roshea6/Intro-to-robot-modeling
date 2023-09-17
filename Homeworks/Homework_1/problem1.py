@@ -5,7 +5,7 @@ import numpy as np
 class bicycleKinematics():
     def __init__(self, initial_pose={"x":0, "y":0, "theta":0}):
         self.L = 1.5
-        self.r = 0.5
+        self.r = 0.5/2
 
         self.pose = initial_pose
 
@@ -20,6 +20,7 @@ class bicycleKinematics():
     def calculateStateDerivatives(self, wheel_velocity, steering_angle):
         # Calculate the relative angle based on the steering and robot angle
         relative_angle = steering_angle + self.pose["theta"]
+        # print(relative_angle)
         x_dot = wheel_velocity*math.sin(relative_angle)
         y_dot = wheel_velocity*math.cos(relative_angle)
         theta_dot = wheel_velocity*math.sin(steering_angle)/self.L
@@ -68,15 +69,18 @@ class bicycleKinematics():
             y_vals.append(self.pose["y"])
 
         # Produce and display the plot
-        plt.plot(x_vals, y_vals)
+        plt.plot(x_vals, y_vals, 'bo')
+        plt.title("Bicycle X, Y Position")
+        plt.xlabel("X Displacement (m)")
+        plt.ylabel("Y Displacement (m)")
         plt.show()
 
 
 
 if __name__ == '__main__':
-    bike_sim = bicycleKinematics()
+    bike_sim = bicycleKinematics(initial_pose={"x":0, "y":0, "theta":0})
 
-    times = np.linspace(0, 4.0, 40)
+    times = np.linspace(0, 6.0, 100)
     
-    bike_sim.plotState(4.0, times)
+    bike_sim.plotState(1.0, times)
 
