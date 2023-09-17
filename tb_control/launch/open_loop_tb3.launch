@@ -1,0 +1,7 @@
+<launch>
+  <group>
+    <set_parameter name="use_sim_time" value="false" />
+    <node name="tb_openloop_controller" pkg="tb_control" exec="tb_openLoop" output="screen" />
+    <!-- <include file="$(find-pkg-share turtlebot3_gazebo)/launch/empty_world.launch.py"/> -->
+  </group>
+</launch>

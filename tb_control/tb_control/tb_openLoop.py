@@ -4,9 +4,7 @@ from tb_control.srv import SetGoal
 
 from geometry_msgs.msg import Twist
 
-import time
 import numpy as np
-import threading
 
 class VelPubNode(Node):
     def __init__(self):
@@ -20,7 +18,7 @@ class VelPubNode(Node):
 
         # Define how much of the designated time period the robot should spend accelerating
         # to and decerating from it's steady state speed
-        self.accel_time = .2
+        self.accel_time = .4
 
         # Define the number of increments between the current speed and the desired speed
         self.num_intermediate_vels = 10
@@ -74,7 +72,7 @@ class VelPubNode(Node):
             # Calculate how much time should be spent at each intermediate vel
             # accel_time should be percentage of total travel time and each intermediate 
             # step should get an equal portion of that time for linear acceleration
-            intermediate_wait_time = (request.time * self.accel_time) / (self.num_intermediate_vels - 1)
+            intermediate_wait_time = (request.time * self.accel_time) / (self.num_intermediate_vels -1)
 
             # Loop through the intermediate velocities, publish one, wait, then publish the next
             # until we've hit the steady state vel
@@ -131,8 +129,10 @@ class VelPubNode(Node):
     # Wait for the specified duration in seconds
     def waitTime(self, duration):
         start_time = self.get_clock().now()
-        # Multiply duration in 
+        # print(start_time)
+        # Multiply duration by 10^9 to convert to nanoeconds
         while (self.get_clock().now() - start_time).nanoseconds < duration* (10**9):
+            # print(self.get_clock().now())
             pass
 
 def main():
