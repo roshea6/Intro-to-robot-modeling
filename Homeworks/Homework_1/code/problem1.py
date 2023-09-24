@@ -78,9 +78,13 @@ class bicycleKinematics():
 
 
 if __name__ == '__main__':
+    # Create the kinematics object for simulating the bike
     bike_sim = bicycleKinematics(initial_pose={"x":0, "y":0, "theta":0})
 
+    # Generate times to be used to calculate the steering angle
+    # As of right now this will generate 100 timestamps between 0 and 6 seconds 
     times = np.linspace(0, 6.0, 100)
     
-    bike_sim.plotState(1.0, times)
+    # Calculate and plot the state for a given wheel angular speed and timestamps
+    bike_sim.plotState(wheel_angular_speed=1.0, timestamps=times)
 
