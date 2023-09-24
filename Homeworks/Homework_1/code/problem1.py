@@ -21,8 +21,8 @@ class bicycleKinematics():
         # Calculate the relative angle based on the steering and robot angle
         relative_angle = steering_angle + self.pose["theta"]
         # print(relative_angle)
-        x_dot = wheel_velocity*math.sin(relative_angle)
-        y_dot = wheel_velocity*math.cos(relative_angle)
+        x_dot = wheel_velocity*math.cos(relative_angle)
+        y_dot = wheel_velocity*math.sin(relative_angle)
         theta_dot = wheel_velocity*math.sin(steering_angle)/self.L
 
         return x_dot, y_dot, theta_dot
