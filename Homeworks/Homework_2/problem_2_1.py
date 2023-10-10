@@ -68,7 +68,8 @@ class SatelliteTrajectory():
             
             self.updateIntermediates()
             
-        # Set velocity to 0 since we've finished the rotation
+        # Set velocity to 0 since we've finished the rotation. This already happens in the remainder section but this takes care
+        # of it in case there's no remainder
         self.current_pose[angle_vel_name] = 0.0
             
             
@@ -76,11 +77,22 @@ class SatelliteTrajectory():
     def updateIntermediates(self):
         for key in self.current_pose.keys():
             self.intermediate_vals[key].append(self.current_pose[key])
+            
+    # Zeros out all velocities and advances one timestep. Used to show the end state of the satellite
+    def zeroVels(self):
+        for item in ["x_omega", "y_omega", "z_omega"]:
+            self.current_pose[item] = 0.0
+            
+        self.timesteps.append(self.timesteps[-1] + 1.0)
+            
+        self.updateIntermediates()
     
     # Nicely displays the current satellite state. Mostly for debugging
     def displayCurrentState(self):
         for key in self.current_pose.keys():
             print("{}: {}".format(key, self.current_pose[key]))
+            
+        print("time: {}".format(self.timesteps[-1]))
     
     # Plots the 6 state variables over time on a single plot
     def displayStatePlot(self):
@@ -103,10 +115,9 @@ if __name__ == '__main__':
     traj.rotate("y", 25.0)
     traj.rotate("z", 16.0)
     
-    # traj.displayCurrentState()
+    traj.zeroVels()
     
-    # print(traj.timesteps)
-    # print(traj.intermediate_vals)
+    traj.displayCurrentState()
     
     traj.displayStatePlot()
     
