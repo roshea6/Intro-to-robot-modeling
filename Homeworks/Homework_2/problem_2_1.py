@@ -15,6 +15,9 @@ class SatelliteTrajectory():
         
         # Timesteps to plot against
         self.timesteps = [0.0]
+        
+        # Iterable list of plot colors
+        self.plot_colors = iter(['b', 'g', 'r', 'c', 'm', 'y'])
     
     # Rotates the satellite about the specified axis until the current angle is equal to the goal angle
     def rotate(self, axis_name, goal_angle):
@@ -57,7 +60,8 @@ class SatelliteTrajectory():
             elif max_vel < 0:
                 self.current_pose[angle_name] -= remainder
             
-            self.current_pose[angle_vel_name] = max_vel
+            # Set velocity to 0 since we've finished the rotation
+            self.current_pose[angle_vel_name] = 0.0
             
             # Add a new timestep that's a fraction of a second
             self.timesteps.append(self.timesteps[-1] + remainder/self.max_ang_vel)
@@ -78,8 +82,18 @@ class SatelliteTrajectory():
         for key in self.current_pose.keys():
             print("{}: {}".format(key, self.current_pose[key]))
     
+    # Plots the 6 state variables over time on a single plot
     def displayStatePlot(self):
-        pass
+        for key in self.intermediate_vals.keys():
+            plt.plot(self.timesteps, self.intermediate_vals[key], color=next(self.plot_colors), label=key)
+            
+        plt.xlabel("Time (seconds)")
+        plt.ylabel("Value (degrees and degrees/second)")
+        plt.title("Satellite State over Time")
+        
+        plt.legend()
+        
+        plt.show()
     
     
 if __name__ == '__main__':
@@ -89,10 +103,12 @@ if __name__ == '__main__':
     traj.rotate("y", 25.0)
     traj.rotate("z", 16.0)
     
-    traj.displayCurrentState()
+    # traj.displayCurrentState()
     
-    print(traj.timesteps)
-    print(traj.intermediate_vals)
+    # print(traj.timesteps)
+    # print(traj.intermediate_vals)
+    
+    traj.displayStatePlot()
     
     
     
