@@ -2,6 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 
+plt.rcParams.update({'font.size': 22})
+
+# Utility functions to make calculations for the satellite trajectory easier
 class Utils():
     def __init__(self):
         pass
@@ -41,7 +44,9 @@ class Utils():
     # Converts desired rotations around the x, y, and z axis into axis angle form
     def caclculateAxisAngleForm(self, x_rot, y_rot, z_rot):
         # Multiply the rotation matrices together in the order Z(YX)
-        final_rot_mat = np.matmul(self.getZRotMat(self.deg2Rad(z_rot)), np.matmul(self.getYRotMat(self.deg2Rad(y_rot)), self.getXRotMat(self.deg2Rad(x_rot))))
+        final_rot_mat = np.matmul(self.getZRotMat(self.deg2Rad(z_rot)), 
+                                  np.matmul(self.getYRotMat(self.deg2Rad(y_rot)), 
+                                            self.getXRotMat(self.deg2Rad(x_rot))))
 
         # Break out the rotation matrix entries to make the theta and k calculations easier
         r11 = final_rot_mat[0][0]
@@ -60,9 +65,12 @@ class Utils():
         k = (1/(2*math.sin(theta))) * np.array([r32 - r23,
                                             r13 - r31,
                                             r21 - r12])
+        
+        print("Axis angle form: theta={} \t k={}".format(theta, k))
 
         return self.rad2Deg(theta), k
 
+# Class for simulating the orientation of a satellite as it rotates in space over time
 class SatelliteTrajectory():
     def __init__(self):
         self.max_ang_vel = 2.0
@@ -84,6 +92,8 @@ class SatelliteTrajectory():
         # Iterable list of plot colors
         self.plot_colors = iter(['b', 'g', 'r', 'c', 'm', 'y'])
     
+    # ! IMPORTANT: This is old code from my first attempt at the problem before I tried using axis angle representation.
+    # The correctly implemented code is in rotateOtherAxis
     # Rotates the satellite about the specified axis until the current angle is equal to the goal angle
     def rotate(self, axis_name, goal_angle):
         # Grab the desired angle based on the passed in axis
@@ -142,15 +152,14 @@ class SatelliteTrajectory():
         # Find total time it would take to rotate around the new axis at the max rotation speed
         min_time = axis_angle/self.max_ang_vel
         
-        # print(min_time)
+        # Calculate the velocity about each axis based on the time it will take to perform the rotation
         scaled_vels = [vel/min_time for vel in world_angles]
+        
+        print("Angular velocities (x, y, z): {}".format(scaled_vels))
         
         # Find the whole and partial seconds required to perform the full rotation
         whole_sec = int(axis_angle/self.max_ang_vel)
         partial = abs(axis_angle) % self.max_ang_vel
-        
-        # print(whole_sec)
-        # print(partial)
         
         # Get the intermediate values for the state variables for each whole timestep
         for i in range(whole_sec):
@@ -229,13 +238,13 @@ if __name__ == '__main__':
     
     util = Utils()
     
-    angle, vec = util.caclculateAxisAngleForm(45.0, 25.0, 16.0)
+    # angle, vec = util.caclculateAxisAngleForm(45.0, 25.0, 16.0)
     
-    traj.rotateOtherAxis(angle, [45.0, 25.0, 16.0])
+    # traj.rotateOtherAxis(angle, [45.0, 25.0, 16.0])
     
-    # traj.rotate("x", 45.0)
-    # traj.rotate("y", 25.0)
-    # traj.rotate("z", 16.0)
+    traj.rotate("x", 45.0)
+    traj.rotate("y", 25.0)
+    traj.rotate("z", 16.0)
     
     # traj.zeroVels()
     
