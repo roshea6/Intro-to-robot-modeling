@@ -18,6 +18,7 @@ def generate_launch_description():
 
     ####### DATA INPUT ##########
     xacro_file = "car_assembly.urdf.xacro"
+    control_config_file = "control.yaml"
 
     package_description = "car_assembly"
 
@@ -33,6 +34,8 @@ def generate_launch_description():
     # Path to robot model XACRO File
     robot_desc_path = os.path.join(get_package_share_directory(
         package_description), "urdf", xacro_file)
+    control_config_path = os.path.join(get_package_share_directory(
+        package_description), "config", control_config_file)
 
 
     # Robot Description in XACRO Format
@@ -93,6 +96,13 @@ def generate_launch_description():
         condition=launch.conditions.UnlessCondition(LaunchConfiguration('gui'))
     )
 
+    # Controller manager
+    controller_manager = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[xml, control_config_path]
+    )
+
 
     # Joint State Broadcaster Node
     joint_state_broadcaster_spawner = Node(
@@ -138,7 +148,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_publisher',
         output='screen',
-        arguments=['1', '0', '0', '0', '0', '0', '1', '/map',  '/dummy_link'  ],
+        arguments=['1', '0', '0', '0', '0', '0', '1', '/map', '/dummy_link'],
     )
 
     # create and return launch description object
@@ -148,6 +158,7 @@ def generate_launch_description():
                                             description='Flag to enable joint_state_publisher_gui'),
             launch.actions.DeclareLaunchArgument(name='use_sim_time', default_value='True',
                                             description='Flag to enable use_sim_time'),
+            controller_manager,
             publish_robot_description,
             joint_state_publisher_node,
             robot_state_publisher,

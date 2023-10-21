@@ -1,27 +1,24 @@
-<?xml version="1.0"?>
+<?xml version="1.0" ?>
 <!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
      Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot
   name="car_assembly" xmlns:xacro="http://ros.org/wiki/xacro">
-
-  <link name="dummy_link"></link>
-
   <link
     name="base_link">
     <inertial>
       <origin
-        xyz="0.0984933879187388 0.139538868480493 -0.0524164095634679"
+        xyz="0.0984933879187388 0.0524164095634679 0.139538868480493"
         rpy="0 0 0" />
       <mass
         value="42.437819295697" />
       <inertia
         ixx="0.793248965062798"
-        ixy="0.12082958397428"
-        ixz="0.0438841068170688"
-        iyy="3.47432493664263"
-        iyz="-0.00250976744462374"
-        izz="2.9050823428007" />
+        ixy="-0.0438841068170687"
+        ixz="0.12082958397428"
+        iyy="2.9050823428007"
+        iyz="0.00250976744462378"
+        izz="3.47432493664263" />
     </inertial>
     <visual>
       <origin
@@ -47,26 +44,21 @@
       </geometry>
     </collision>
   </link>
-  <joint name="dummy_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 0" />
-    <parent link="dummy_link"/>
-    <child link="base_link"/>
-  </joint>
   <link
     name="back_left_wheel_link">
     <inertial>
       <origin
-        xyz="2.20701026898418E-11 2.3632068524293E-10 0.0485238176719048"
+        xyz="2.20710116849432E-11 2.36282771126639E-10 0.0494452643769656"
         rpy="0 0 0" />
       <mass
-        value="0.929515950960187" />
+        value="0.92951595082452" />
       <inertia
-        ixx="0.00334561969791303"
-        ixy="-1.35412065084509E-12"
-        ixz="-4.94448256074592E-13"
-        iyy="0.00334561968377833"
-        iyz="-5.13307857997287E-12"
-        izz="0.00569925253456415" />
+        ixx="0.00334561969767302"
+        ixy="-1.3544059046352E-12"
+        ixz="-4.94375218117616E-13"
+        iyy="0.00334561968353542"
+        iyz="-5.13247205017253E-12"
+        izz="0.00569925253419484" />
     </inertial>
     <visual>
       <origin
@@ -96,8 +88,8 @@
     name="back_left_wheel_joint"
     type="continuous">
     <origin
-      xyz="0.32894 -0.11589 -0.017794"
-      rpy="-1.5708 1.4356 -3.1208" />
+      xyz="0.328921249974496 -0.114964083839878 -0.0177944693206667"
+      rpy="-1.5707963267949 0.469083696110007 -3.12082450627461" />
     <parent
       link="base_link" />
     <child
@@ -109,17 +101,17 @@
     name="back_right_wheel_link">
     <inertial>
       <origin
-        xyz="2.19100848575238E-11 2.36971997580326E-10 0.0479937520853098"
+        xyz="2.20231055614306E-11 2.37201022712519E-10 0.049028557176643"
         rpy="0 0 0" />
       <mass
-        value="0.929515950263186" />
+        value="0.929515950065346" />
       <inertia
-        ixx="0.00334561969667993"
-        ixy="-1.35549519578422E-12"
-        ixz="-4.91341972804708E-13"
-        iyy="0.00334561968253039"
-        iyz="-5.15041254599154E-12"
-        izz="0.00569925253266686" />
+        ixx="0.00334561969632988"
+        ixy="-1.3558819778657E-12"
+        ixz="-4.94323420358826E-13"
+        iyy="0.0033456196821762"
+        iyz="-5.15615434260063E-12"
+        izz="0.00569925253212831" />
     </inertial>
     <visual>
       <origin
@@ -149,8 +141,8 @@
     name="back_right_wheel_joint"
     type="continuous">
     <origin
-      xyz="0.32174 0.23067 -0.017794"
-      rpy="1.5708 0 -3.1208" />
+      xyz="0.321763483964631 0.229637520986015 -0.0177944693206667"
+      rpy="1.5707963267949 -0.291614530450468 -3.12082450627461" />
     <parent
       link="base_link" />
     <child
@@ -162,17 +154,17 @@
     name="front_left_steer_link">
     <inertial>
       <origin
-        xyz="1.66541358932737E-05 0.0339902365470534 0.00881686894273455"
+        xyz="1.66547595339128E-05 0.0339902371024883 0.00881686935201453"
         rpy="0 0 0" />
       <mass
-        value="0.979289571979995" />
+        value="0.979289581300228" />
       <inertia
-        ixx="0.00377322322154386"
-        ixy="8.43332889853372E-07"
-        ixz="-9.37533254204548E-07"
-        iyy="0.00118944602771482"
-        iyz="0.000447122978840801"
-        izz="0.00324735800237895" />
+        ixx="0.00377322325335636"
+        ixy="8.43295143974749E-07"
+        ixz="-9.37539386378859E-07"
+        iyy="0.00118944602853968"
+        iyz="0.000447122954117804"
+        izz="0.00324735803538192" />
     </inertial>
     <visual>
       <origin
@@ -200,10 +192,10 @@
   </link>
   <joint
     name="front_left_steer_joint"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="-0.17971 -0.089917 0"
-      rpy="1.5708 0 0.019283" />
+      rpy="1.5708 0 0.094044" />
     <parent
       link="base_link" />
     <child
@@ -220,17 +212,17 @@
     name="front_left_wheel_link">
     <inertial>
       <origin
-        xyz="2.21104939912564E-11 2.36410446774471E-10 0.0491271368458189"
+        xyz="-2.14738699044759E-10 -1.01100947058619E-10 0.0703981423141871"
         rpy="0 0 0" />
       <mass
-        value="0.929515950852005" />
+        value="0.929515950960186" />
       <inertia
-        ixx="0.00334561969772165"
-        ixy="-1.3543360132468E-12"
-        ixz="-4.955219516504E-13"
-        iyy="0.00334561968358468"
-        iyz="-5.13540815097078E-12"
-        izz="0.00569925253426966" />
+        ixx="0.00334561968624407"
+        ixy="-5.5323038334213E-12"
+        ixz="4.6719790579644E-12"
+        iyy="0.00334561969544726"
+        iyz="2.1830288634726E-12"
+        izz="0.00569925253456414" />
     </inertial>
     <visual>
       <origin
@@ -260,8 +252,8 @@
     name="front_left_wheel_joint"
     type="continuous">
     <origin
-      xyz="0.00012521 -0.017794 0.035923"
-      rpy="0 0 1.0465" />
+      xyz="0.000125211657348218 -0.0177944693206653 0.014651735605834"
+      rpy="0 0 -2.49079241735017" />
     <parent
       link="front_left_steer_link" />
     <child
@@ -273,17 +265,17 @@
     name="front_right_steer_link">
     <inertial>
       <origin
-        xyz="1.66538436364716E-05 0.0339902362547982 0.00881686876318738"
+        xyz="0.00126307247469412 0.0339902372861786 0.00872594484877132"
         rpy="0 0 0" />
       <mass
-        value="0.979289566987531" />
+        value="0.9792895843257" />
       <inertia
-        ixx="0.00377322320424715"
-        ixy="8.43350650471856E-07"
-        ixz="-9.37529907092586E-07"
-        iyy="0.00118944602573503"
-        iyz="0.000447122989383998"
-        izz="0.00324735798453781" />
+        ixx="0.00376244872178771"
+        ixy="6.40518802839026E-05"
+        ixz="-7.4503324424236E-05"
+        iyy="0.00118944602891897"
+        iyz="0.000442512140457697"
+        izz="0.003258132588816" />
     </inertial>
     <visual>
       <origin
@@ -311,10 +303,10 @@
   </link>
   <joint
     name="front_right_steer_joint"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="-0.18538 0.18307 0"
-      rpy="1.5708 0 3.1278" />
+      rpy="1.5708 0 3.1235" />
     <parent
       link="base_link" />
     <child
@@ -331,17 +323,17 @@
     name="front_right_wheel_link">
     <inertial>
       <origin
-        xyz="2.26368368494434E-11 2.36441574652524E-10 0.0437602213911082"
+        xyz="0.0109238220794718 0.00502372733917364 0.042877854866294"
         rpy="0 0 0" />
       <mass
-        value="0.929515949350559" />
+        value="0.92951595459559" />
       <inertia
-        ixx="0.00334561969506469"
-        ixy="-1.35743100890269E-12"
-        ixz="-5.07741489504847E-13"
-        iyy="0.00334561968089601"
-        iyz="-5.13870792197681E-12"
-        izz="0.0056992525301826" />
+        ixx="0.00338445542348172"
+        ixy="1.78600464053296E-05"
+        ixz="0.000299295584991618"
+        iyy="0.00335383331665573"
+        iyz="0.000137642239695159"
+        izz="0.00565220320828645" />
     </inertial>
     <visual>
       <origin
@@ -371,8 +363,8 @@
     name="front_right_wheel_joint"
     type="continuous">
     <origin
-      xyz="0.00012521 -0.017794 0.04129"
-      rpy="0 0 -0.43105" />
+      xyz="0.000125211657348301 -0.0177944693206666 0.0412999511488255"
+      rpy="0 0 -0.431045729807837" />
     <parent
       link="front_right_steer_link" />
     <child
@@ -382,73 +374,69 @@
   </joint>
 
   <ros2_control name="GazeboSystem" type="system">
-    <hardware>
-        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
-    </hardware>
+  <hardware>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+  </hardware>
 
-    <!-- Velocity controllers -->
+  <!-- Velocity Controllers -->
+  <!-- Back wheels -->
+  <joint name="back_right_wheel_joint">
+      <command_interface name="velocity">
+          <param name="min">-1000.0</param>
+          <param name="max">1000.0</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+  </joint>
 
-    <!-- Front Wheels -->
-    <joint name="front_right_wheel_joint">
-        <command_interface name="velocity">
-            <param name="min">-1000.0</param>
-            <param name="max">1000.0</param>
-        </command_interface>
-        <state_interface name="position"/>
-        <state_interface name="velocity"/>
-    </joint>
+  <joint name="back_left_wheel_joint">
+      <command_interface name="velocity">
+          <param name="min">-1000.0</param>
+          <param name="max">1000.0</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+  </joint>
 
-    <joint name="front_left_wheel_joint">
-        <command_interface name="velocity">
-            <param name="min">-1000.0</param>
-            <param name="max">1000.0</param>
-        </command_interface>
-        <state_interface name="position"/>
-        <state_interface name="velocity"/>
-    </joint>
+  <!-- Front Wheels -->
+  <joint name="front_right_wheel_joint">
+      <command_interface name="velocity">
+          <param name="min">-1000.0</param>
+          <param name="max">1000.0</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+  </joint>
 
-    <!-- Back Wheels -->
-    <joint name="back_right_wheel_joint">
-        <command_interface name="velocity">
-            <param name="min">-1000.0</param>
-            <param name="max">1000.0</param>
-        </command_interface>
-        <state_interface name="position"/>
-        <state_interface name="velocity"/>
-    </joint>
+  <joint name="front_left_wheel_joint">
+      <command_interface name="velocity">
+          <param name="min">-1000.0</param>
+          <param name="max">1000.0</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+  </joint>
 
-    <joint name="back_left_wheel_joint">
-        <command_interface name="velocity">
-            <param name="min">-1000.0</param>
-            <param name="max">1000.0</param>
-        </command_interface>
-        <state_interface name="position"/>
-        <state_interface name="velocity"/>
-    </joint>
 
-    <!-- Position Controllers -->
-    <joint name="front_left_steer_joint">
-        <command_interface name="position">
-            <param name="min">-0.785</param>
-            <param name="max">0.785</param>
-        </command_interface>
-        <state_interface name="position"/>
-        <state_interface name="velocity"/>
-    </joint>
+  <!-- Position Controllers -->
+  <joint name="front_left_steer_joint">
+      <command_interface name="position">
+          <param name="min">-3.14</param>
+          <param name="max">3.14</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+  </joint>
 
-    <joint name="front_right_steer_joint">
-        <command_interface name="position">
-            <param name="min">-0.785</param>
-            <param name="max">0.785</param>
-        </command_interface>
-        <state_interface name="position"/>
-        <state_interface name="velocity"/>
-    </joint>
-    
-  </ros2_control>
-  <gazebo>
-      <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
-          <parameters>$(find car_assembly)/config/control.yaml</parameters>
-      </plugin>
-    </gazebo>
+  <joint name="front_left_steer_joint">
+      <command_interface name="position">
+          <param name="min">-3.14</param>
+          <param name="max">3.14</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+  </joint>
+
+ </ros2_control>
+
 </robot>
