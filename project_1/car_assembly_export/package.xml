@@ -1,5 +1,5 @@
 <package format="2">
-  <name>car_assembly</name>
+  <name>car_assembly_export</name>
   <version>1.0.0</version>
   <description>
     <p>URDF Description package for car_assembly</p>

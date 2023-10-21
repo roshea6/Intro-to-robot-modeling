@@ -1,9 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" ?>
 <!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
      Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
-<robot
-  name="car_assembly">
+<robot name="car_assembly" xmlns:xacro="http://ros.org/wiki/xacro">
+  <!-- # Add this be  fore base link -->
+  <link name="dummy_link"></link>
+  
   <link
     name="base_link">
     <inertial>
@@ -44,6 +46,14 @@
       </geometry>
     </collision>
   </link>
+
+  <!-- # Add this after base link -->
+  <joint name="dummy_joint" type="fixed">
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <parent link="dummy_link"/>
+      <child link="base_link"/>
+  </joint>
+
   <link
     name="back_left_wheel_link">
     <inertial>
@@ -262,7 +272,7 @@
       xyz="0 0 1" />
   </joint>
   <link
-    name="front_right_steer_joint">
+    name="front_right_steer_link">
     <inertial>
       <origin
         xyz="0.0014273 0.03399 0.0087006"
@@ -283,7 +293,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://car_assembly/meshes/front_right_steer_joint.STL" />
+          filename="package://car_assembly/meshes/front_right_steer_link.STL" />
       </geometry>
       <material
         name="">
@@ -297,7 +307,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://car_assembly/meshes/front_right_steer_joint.STL" />
+          filename="package://car_assembly/meshes/front_right_steer_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -310,7 +320,7 @@
     <parent
       link="base_link" />
     <child
-      link="front_right_steer_joint" />
+      link="front_right_steer_link" />
     <axis
       xyz="0 1 0" />
     <limit
@@ -366,10 +376,26 @@
       xyz="0.00012521 -0.017794 0.0413"
       rpy="0 0 -0.43105" />
     <parent
-      link="front_right_steer_joint" />
+      link="front_right_steer_link" />
     <child
       link="front_right_wheel_link" />
     <axis
       xyz="0 0 1" />
   </joint>
+
+  <!-- <xacro:macro name="body_color">
+    <visual>
+    <material>
+        <ambient>0.8 0.558823529411765 0.1 1</ambient>
+        <diffuse>0.8 0.558823529411765 0.1 1</diffuse>
+        <specular>0.1 0.1 0.1 1</specular>
+        <emissive>0 0 0 0</emissive>
+    </material>
+    </visual>
+  </xacro:macro>
+
+  <gazebo reference="base_link">
+    <xacro:body_color />
+  </gazebo> -->
+
 </robot>
