@@ -49,9 +49,6 @@ def generate_launch_description():
         )
     )
 
-
-    
-
     # Launch Description 
     return LaunchDescription([
         gzserver_cmd,
