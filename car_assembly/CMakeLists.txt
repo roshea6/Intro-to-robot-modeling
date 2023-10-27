@@ -7,10 +7,14 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
 find_package(robot_state_publisher REQUIRED)
 find_package(xacro REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(ros2_control REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -20,6 +24,9 @@ install(DIRECTORY
   meshes
   launch
   worlds
+  config
+  rviz
+  competition
   DESTINATION share/${PROJECT_NAME}/
   )
 
@@ -44,5 +51,15 @@ if(BUILD_TESTING)
   #set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
+
+# Install Python modules
+ament_python_install_package(${PROJECT_NAME})
+
+# Install Python executables
+install(PROGRAMS
+  car_assembly/teleop_control.py
+  car_assembly/proportional_controller.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 ament_package()

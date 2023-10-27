@@ -54,7 +54,7 @@ def generate_launch_description():
 
      # RVIZ Configuration
     rviz_config_dir = PathJoinSubstitution(
-        [FindPackageShare("car_assembly"), "rviz", "display_default.rviz"]
+        [FindPackageShare("car_assembly"), "rviz", "model_and_laser_display.rviz"]
     )
 
     rviz_node = Node(
