@@ -27,6 +27,10 @@ theta_val_list[joint_num_to_rotate] += rotate_amount
 
 transformation_mats = []
 
+# Lambda function from Saksham to truncate values in a matrix
+# Removes the super small near zero values that result from floating point operations
+roundMatrix = lambda m, n: sympy.Matrix([[round(m[x, y], n) for y in range(m.shape[1])] for x in range(m.shape[0])])
+
 # Loop through the table and built the individual transformation matrices from frame to frame
 for idx, entry in enumerate(a_list):
     a = entry
@@ -42,8 +46,6 @@ for idx, entry in enumerate(a_list):
     
     # trans_mat = trans_mat.evalf(5)
     
-    roundMatrix = lambda m, n: sympy.Matrix([[round(m[x, y], n) for y in range(m.shape[1])] for x in range(m.shape[0])])
-
     trans_mat = roundMatrix(trans_mat, 5)
     
     print("Transform matrix from frame {} to {}".format(idx, idx+1))
@@ -61,10 +63,6 @@ res_mat = sympy.Matrix(np.identity(4))
 # Multiply the matrices together in the order T1*T2*T3.... to get the final transformation matrix from frame 0 to n
 for trans_mat in transformation_mats:
     res_mat = res_mat*trans_mat
-    
-# Lambda function from Saksham to truncate values in a matrix
-# Removes the super small near zero values that result from floating point operations
-roundMatrix = lambda m, n: sympy.Matrix([[round(m[x, y], n) for y in range(m.shape[1])] for x in range(m.shape[0])])
 
 res_mat = roundMatrix(res_mat, 5)
 
