@@ -15,8 +15,10 @@ theta_list = [theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n]
 
 # Calculated values for alphas and thetas in the home position of the robot
 alpha_val_list = [math.pi/2, math.pi, math.pi, -math.pi/2, math.pi/2, 0]
-# theta_val_list = [math.pi, -math.pi/2, 0, math.pi/2, 0, 0]
 theta_val_list = [math.pi, -math.pi/2, 0, math.pi/2, 0, 0]
+
+# Set to true if you want the matrices to be displayed with thetas as a variable
+evaluate_with_vars = False
 
 # If we want to actuate a joint define the joint number and the amount to rotate it by
 joint_num_to_rotate = 0
@@ -36,7 +38,10 @@ for idx, entry in enumerate(a_list):
     a = entry
     d = d_list[idx]
     alpha = alpha_val_list[idx]
-    theta = theta_val_list[idx]
+    if evaluate_with_vars:
+        theta = theta_list[idx]
+    else:
+        theta = theta_val_list[idx]
     
     # Create the unique transformation matrix for a given row from the DH table
     trans_mat = sympy.Matrix([[sympy.cos(theta), -sympy.sin(theta)*sympy.cos(alpha), sympy.sin(theta)*sympy.sin(alpha), a*sympy.cos(theta)],
@@ -46,7 +51,9 @@ for idx, entry in enumerate(a_list):
     
     # trans_mat = trans_mat.evalf(5)
     
-    trans_mat = roundMatrix(trans_mat, 5)
+    # Remove near 0 values to clean up the matrix
+    if not evaluate_with_vars:
+        trans_mat = roundMatrix(trans_mat, 5)
     
     print("Transform matrix from frame {} to {}".format(idx, idx+1))
     sympy.pprint(trans_mat)
@@ -64,7 +71,9 @@ res_mat = sympy.Matrix(np.identity(4))
 for trans_mat in transformation_mats:
     res_mat = res_mat*trans_mat
 
-res_mat = roundMatrix(res_mat, 5)
+# Again remove any near 0 values from floating point operations
+if not evaluate_with_vars:
+    res_mat = roundMatrix(res_mat, 5)
 
 # res_mat = res_mat.evalf(5)
     
