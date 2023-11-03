@@ -6,18 +6,20 @@ from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float64MultiArray
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
-import time
+import math
+import numpy as np
 
 class ProportionalControlNode(Node):
 
-    def __init__(self, goal_x_pos):
+    def __init__(self, goal_pose):
         super().__init__('proportional_control_node')
 
-        self.goal_x_pos = goal_x_pos
+        self.goal_x_pos = goal_pose[0]
+        self.goal_y_pos = goal_pose[1]
 
         self.max_vel = 4.0
         self.vel_step_size = 0.1
-        self.max_accel = 2.0
+        self.max_accel = 1.0
 
         # Define publishers for the joint and wheel states
         self.joint_position_pub = self.create_publisher(Float64MultiArray, '/position_controller/commands', 10)
@@ -37,6 +39,7 @@ class ProportionalControlNode(Node):
             qos_profile=qos_profile)
         
         self.current_x_pos = 0.0
+        self.current_y_pos = 0.0
         self.current_vel = 0.0
 
         previous_timestamp = self.get_clock().now().nanoseconds
@@ -47,19 +50,38 @@ class ProportionalControlNode(Node):
         self.last_n_timestamps = [previous_timestamp]
         self.last_n_accels = [0]
         self.last_n_vels = [0]
-        self.n_samples = 2
+        self.n_samples = 5
 
         self.wheel_radius = 0.1016
 
         # Proportional component parameter
         self.Kp = 0.2
 
+    # Euler from quaternion helper function from resources found online
+    # https://gist.github.com/salmagro/2e698ad4fbf9dae40244769c5ab74434
+    def euler_from_quaternion(self, imu_msg):
+        x = imu_msg.orientation.x
+        y = imu_msg.orientation.y
+        z = imu_msg.orientation.z
+        w = imu_msg.orientation.w
+
+        roll = np.arctan2(2*(w*x + y*z), 1-2*(x*x +y*y))
+        pitch = np.arcsin(2*(w*y - z*x))
+        yaw = np.arctan2(2*(w*z + x*y), 1-2*(y*y + z*z))
+
+        return roll, pitch, yaw
+
     def imu_callback(self, imu_msg):
         # Grab just the linear acceleration in the x direction
         lin_x_accel = imu_msg.linear_acceleration.x
 
+        # Get the rpy values from the quaternion orientation
+        # Really only need yaw
+        roll, pitch, yaw = self.euler_from_quaternion(imu_msg)
+        print("Current yaw: {}".format(yaw))
+
         # Band pass filter to filter out IMU acceleration noise
-        if abs(lin_x_accel) < 0.1:
+        if abs(lin_x_accel) < 0.001:
             lin_x_accel = 0
         elif lin_x_accel > self.max_accel:
             lin_x_accel = self.max_accel 
@@ -90,7 +112,7 @@ class ProportionalControlNode(Node):
 
         # Calculate current vel based on previous vel, time delta, and accel
         # Negative sign because the robot is technically facing backwards
-        latest_vel = self.current_vel + -avg_accel * time_diff
+        latest_vel = self.current_vel + -avg_accel*time_diff
 
         self.last_n_vels.append(latest_vel)
 
@@ -102,9 +124,11 @@ class ProportionalControlNode(Node):
 
         # Get the distance traveled since the last timestep using the average velocity 
         # over that time
-        self.current_x_pos += avg_vel*time_diff
+        self.current_x_pos += -avg_vel*time_diff*math.sin(yaw)
+        self.current_y_pos += -avg_vel*time_diff*math.cos(yaw)
 
-        dist_err = self.goal_x_pos - self.current_x_pos
+        x_dist_err = self.goal_x_pos - self.current_x_pos
+        y_dist_err = self.goal_y_pos - self.current_y_pos
 
         # Calculate the error between goal and current vel
         # vel_diff = self.goal_vel - self.current_vel
@@ -113,37 +137,37 @@ class ProportionalControlNode(Node):
 
         # Define our new desired velocity based on the error
         # Multipy the difference by our Kp parameter so we take steps towards the goal
-        new_vel = latest_vel + dist_err*self.Kp
+        new_x_vel = latest_vel*math.sin(yaw) + x_dist_err*self.Kp
+        new_y_vel = latest_vel*math.cos(yaw) + y_dist_err*self.Kp
 
-        if new_vel > self.max_vel:
-            new_vel = self.max_vel
-        elif new_vel < -self.max_vel:
-            new_vel = -self.max_vel
-        
 
-        print("New vel: {} \t Current vel: {}".format(new_vel, latest_vel))
+        # Bound the x and y vels between the maxes
+        new_x_vel = max(min(new_x_vel, self.max_vel), -self.max_vel)
+        new_y_vel = max(min(new_y_vel, self.max_vel), -self.max_vel)
 
-        print("Current X pos: {} \t Goal X pos: {}".format(self.current_x_pos, self.goal_x_pos))
+        print("Last vels: {}".format(self.last_n_vels))
+        print("New vel: ({}, {}) \t Current vel: {}".format(new_x_vel, new_y_vel, latest_vel))
+
+        print("Current pos: ({}, {}) \t Goal pos: ({}, {})".format(self.current_x_pos, self.current_y_pos, self.goal_x_pos, self.goal_y_pos))
 
         self.current_vel = latest_vel
 
         # Calculate the wheel velocities from the desired linear velocity
-        wheel_vel = new_vel/self.wheel_radius
+        right_wheel_vel = new_x_vel/self.wheel_radius
+        left_wheel_vel = new_y_vel/self.wheel_radius
 
-        print("Wheel vel: {} \n".format(wheel_vel))
-
-        return
+        print("Wheel vel: ({}, {}) \n".format(right_wheel_vel, left_wheel_vel))
 
         # Joint velocities message
         wheel_velocities = Float64MultiArray()
 
-        wheel_velocities.data = [wheel_vel,-wheel_vel, wheel_vel, -wheel_vel]
+        wheel_velocities.data = [left_wheel_vel,-right_wheel_vel, left_wheel_vel, -right_wheel_vel]
         self.wheel_velocities_pub.publish(wheel_velocities)
 
 
 def main(args=None):
     rclpy.init(args=args)
-    node = ProportionalControlNode(goal_x_pos=20.0)
+    node = ProportionalControlNode(goal_pose = (10, 10))
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
