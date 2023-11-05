@@ -49,18 +49,9 @@ class ProportionalControlNode(Node):
         
         self.current_x_pos = 0.0
         self.current_y_pos = 0.0
-        self.current_vel = 0.0
         self.previous_vel = 0.0
 
         self.previous_timestamp = self.get_clock().now().nanoseconds
-        # previous_timestamp = time.time()
-
-        # Variables for saving the last n timestamps and accelerations so the 
-        # accelerations can be averaged
-        self.last_n_timestamps = [self.previous_timestamp]
-        self.last_n_accels = [0]
-        self.last_n_vels = [0]
-        self.n_samples = 5
 
         self.wheel_radius = 0.1016
 
@@ -70,9 +61,6 @@ class ProportionalControlNode(Node):
         self.timestep_list = []
         self.error_list = []
         self.control_list = []
-
-        # Lists for saving the timestamps, errors, and controls to plot
-        # Use distance from first timestamp like in the homework
 
         # self.last_simulation_time = self.get_clock().now().nanoseconds
         # self.last_wall_clock_time = time.time()*10**9
@@ -122,30 +110,8 @@ class ProportionalControlNode(Node):
         roll, pitch, yaw = self.euler_from_quaternion(imu_msg)
         print("Current yaw: {}".format(yaw))
 
-        # Band pass filter to filter out IMU acceleration noise
-        # if abs(lin_x_accel) < 0.1:
-        #     lin_x_accel = 0
-        # elif lin_x_accel > self.max_accel:
-        #     lin_x_accel = self.max_accel 
-        # elif lin_x_accel < -self.max_accel:
-        #     lin_x_accel = -self.max_accel
-
         # Get the current time and difference from the previous time
         curr_time = self.get_clock().now().nanoseconds
-        # curr_time = time.time()
-
-        # self.last_n_accels.append(lin_x_accel)
-        # self.last_n_timestamps.append(curr_time)
-
-        # # If we've saved more than n samples remove the oldest
-        # if len(self.last_n_accels) > self.n_samples:
-        #     self.last_n_accels.pop(0)
-        #     self.last_n_timestamps.pop(0)
-
-        # # Calculate the average acceleration using the last n samples
-        # avg_accel = sum(self.last_n_accels)/len(self.last_n_accels)
-        # print("Latest accel: {}".format(lin_x_accel))
-        # print("Accel: {}".format(avg_accel))
 
         # Calculate the time diff across the oldest and latest acceleration readings
         # Divide by 10^9 to convert to seconds
@@ -154,20 +120,6 @@ class ProportionalControlNode(Node):
         time_diff *= self.real_time_factor
         self.previous_timestamp = curr_time
         print("Time diff: {}".format(time_diff))
-
-        # Calculate current vel based on previous vel, time delta, and accel
-        # Negative sign because the robot is technically facing backwards
-        # vel_inc = min(max(-avg_accel*time_diff, -self.vel_step_size), self.vel_step_size)
-        # print("Vel increment: {}".format(vel_inc))
-        # latest_vel = self.current_vel + vel_inc
-
-        # self.last_n_vels.append(latest_vel)
-
-        # If we've saved more than n samples remove the oldest
-        # if len(self.last_n_vels) > self.n_samples:
-        #     self.last_n_vels.pop(0)
-
-        # avg_vel = sum(self.last_n_vels)/len(self.last_n_vels)
 
         # Get the distance traveled since the last timestep using the average velocity 
         # over that time
@@ -186,12 +138,6 @@ class ProportionalControlNode(Node):
             # Multipy the difference by our Kp parameter so we take steps towards the goal
             new_x_vel = -self.previous_vel*math.sin(yaw) + x_dist_err*self.Kp
             new_y_vel = -self.previous_vel*math.cos(yaw) + y_dist_err*self.Kp
-
-        # Calculate the error between goal and current vel
-        # vel_diff = self.goal_vel - self.current_vel
-
-        # print("IMU vel: {} \t Vel Error: {}".format(self.current_vel, vel_diff))
-
 
         # Bound the x and y vels between the maxes
         new_x_vel = max(min(new_x_vel, self.max_vel), -self.max_vel)

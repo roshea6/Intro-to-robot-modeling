@@ -23,7 +23,7 @@ def generate_launch_description():
     # Position and orientation
     # [X, Y, Z]
     # position = [1.2, -2.5, 0.2] # competition spawn
-    position = [0.0, 0.0, 0.12] 
+    position = [0.0, 0.0, 0.12] # proportional spawn
     # [Roll, Pitch, Yaw]
     # orientation = [0.0, 0.0, -1.5707] # competition spawn
     orientation = [0.0, 0.0, -2.356] # proportional spawn
