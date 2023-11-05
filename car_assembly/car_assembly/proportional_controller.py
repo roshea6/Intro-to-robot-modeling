@@ -9,6 +9,7 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 import math
 import numpy as np
 import time
+import matplotlib.pyplot as plt
 
 class ProportionalControlNode(Node):
 
@@ -16,14 +17,14 @@ class ProportionalControlNode(Node):
         super().__init__('proportional_control_node')
         # IMPORTANT! Set this value to the average real time factor that you're 
         # Gazebo sim runs at to account for the time differences
-        # Mine runs at like 0.35
-        self.real_time_factor = 0.6
+        # Mine runs at like 0.35 when recording and like 0.75 when not
+        self.real_time_factor = 0.75
 
         self.goal_x_pos = goal_pose[0]
         self.goal_y_pos = goal_pose[1]
 
         # Acceptable distance from the goal tolerance
-        self.goal_tolerance = 0.5
+        self.goal_tolerance = 0.2
 
         self.max_vel = 1.0
         self.vel_step_size = 0.01
@@ -64,7 +65,14 @@ class ProportionalControlNode(Node):
         self.wheel_radius = 0.1016
 
         # Proportional component parameter
-        self.Kp = 0.05
+        self.Kp = 0.0005
+
+        self.timestep_list = []
+        self.error_list = []
+        self.control_list = []
+
+        # Lists for saving the timestamps, errors, and controls to plot
+        # Use distance from first timestamp like in the homework
 
         # self.last_simulation_time = self.get_clock().now().nanoseconds
         # self.last_wall_clock_time = time.time()*10**9
@@ -209,13 +217,37 @@ class ProportionalControlNode(Node):
         wheel_velocities.data = [left_wheel_vel,-right_wheel_vel, left_wheel_vel, -right_wheel_vel]
         self.wheel_velocities_pub.publish(wheel_velocities)
 
+        # Add the timestep, error, and control to their respective lists
+        if len(self.timestep_list) == 0:
+            self.timestep_list.append(1)
+        else:
+            self.timestep_list.append(self.timestep_list[-1] + 1)
+        self.error_list.append(math.sqrt((x_dist_err**2) + (y_dist_err**2)))
+        self.control_list.append(self.previous_vel)
+
+    # Plot the distance error and velocity control over time
+    def plotControls(self):
+        plt.plot(self.timestep_list, self.error_list, label = "Distance Error") 
+        plt.plot(self.timestep_list, self.control_list, label = "Velocity Control") 
+        plt.legend() 
+        plt.title("Velocity Control & Distance Error Over Time")
+        plt.xlabel("Timestep number")
+        plt.ylabel("Velocity (m/s) and Distance Error (m)")
+        plt.show()
+
 
 def main(args=None):
     rclpy.init(args=args)
+    # Wrap this all in a try finall so that after the node is killed with ctrl +c 
+    # it still calls the plotting function
     node = ProportionalControlNode(goal_pose = (10, 10))
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    finally:
+        # After the node has been killed call the plotting function
+        node.plotControls()
+        node.destroy_node()
+        rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
