@@ -18,7 +18,7 @@ class ProportionalControlNode(Node):
         # IMPORTANT! Set this value to the average real time factor that you're 
         # Gazebo sim runs at to account for the time differences
         # Mine runs at like 0.35 when recording and like 0.75 when not
-        self.real_time_factor = 0.75
+        self.real_time_factor = 0.85
 
         self.goal_x_pos = goal_pose[0]
         self.goal_y_pos = goal_pose[1]
@@ -29,6 +29,10 @@ class ProportionalControlNode(Node):
         self.max_vel = 1.0
         self.vel_step_size = 0.01
         self.max_accel = 0.5
+
+        self.last_n_accels = [0]
+        self.last_n_vels = [0]
+        self.n_samples = 2
 
         # Define publishers for the joint and wheel states
         self.joint_position_pub = self.create_publisher(Float64MultiArray, '/position_controller/commands', 10)
@@ -50,6 +54,9 @@ class ProportionalControlNode(Node):
         self.current_x_pos = 0.0
         self.current_y_pos = 0.0
         self.previous_vel = 0.0
+        self.current_vel = 0.0
+
+        self.goal_reached = False
 
         self.previous_timestamp = self.get_clock().now().nanoseconds
 
@@ -121,30 +128,44 @@ class ProportionalControlNode(Node):
         self.previous_timestamp = curr_time
         print("Time diff: {}".format(time_diff))
 
+        # Calculate the measured velocity from the IMU 
+        measured_vel = self.current_vel + lin_x_accel*time_diff
+        
+        self.current_vel = measured_vel
+
         # Get the distance traveled since the last timestep using the average velocity 
         # over that time
-        self.current_x_pos += -self.previous_vel*time_diff*math.sin(yaw)
-        self.current_y_pos += -self.previous_vel*time_diff*math.cos(yaw)
+        self.current_x_pos += measured_vel*time_diff*math.sin(yaw)
+        self.current_y_pos += measured_vel*time_diff*math.cos(yaw)
 
-        x_dist_err = self.goal_x_pos - self.current_x_pos
-        y_dist_err = self.goal_y_pos - self.current_y_pos
+        if not self.goal_reached:
+            x_dist_err = self.goal_x_pos - self.current_x_pos
+            y_dist_err = self.goal_y_pos - self.current_y_pos
+        else:
+            x_dist_err = 0
+            y_dist_err = 0
 
+        # If we're within a certain tolerance of the goal consider it reached and set the velocities 
+        # to zero
         if x_dist_err < self.goal_tolerance and y_dist_err < self.goal_tolerance:
             new_x_vel = 0
             new_y_vel = 0
+            self.current_vel = 0
+            self.goal_reached = True
             print("GOAL REACHED!!!")
         else:
             # Define our new desired velocity based on the error
             # Multipy the difference by our Kp parameter so we take steps towards the goal
             new_x_vel = -self.previous_vel*math.sin(yaw) + x_dist_err*self.Kp
             new_y_vel = -self.previous_vel*math.cos(yaw) + y_dist_err*self.Kp
+            self.goal_reached = False
 
         # Bound the x and y vels between the maxes
         new_x_vel = max(min(new_x_vel, self.max_vel), -self.max_vel)
         new_y_vel = max(min(new_y_vel, self.max_vel), -self.max_vel)
 
         # print("Last vels: {}".format(self.last_n_vels))
-        print("Current vel: {}".format(self.previous_vel))
+        print("Current IMU vel: {}".format(measured_vel))
         self.previous_vel = math.sqrt(new_x_vel**2 + new_y_vel**2)
         print("New vel: ({}, {}) \t Next vel: {}".format(new_x_vel, new_y_vel, self.previous_vel))
 
