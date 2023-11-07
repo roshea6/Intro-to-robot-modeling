@@ -19,8 +19,8 @@ ros2 launch car_assembly competition.launch.py
 ros2 run car_assembly teleop_control.py 
 
 6. For proportional control scenario make the following code changes and run the following commands
-Uncomment lines 26 and 29 in spawn_robot_ros2.launch.py
-Make sure lines 25 and 28 are commented
+Uncomment line 26 in spawn_robot_ros2.launch.py
+Make sure line 25 is commented
 In proportional_controller.py line 21, set the real_time_factor variable to the average value that your gazebo usually has for Real Time Factor.
 This will help account for the simulation slowing down to below real time.
 Rebuild the workspace source your setup.bash file

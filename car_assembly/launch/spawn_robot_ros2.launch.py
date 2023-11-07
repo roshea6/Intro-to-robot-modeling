@@ -25,8 +25,8 @@ def generate_launch_description():
     # position = [1.2, -2.5, 0.2] # competition spawn
     position = [0.0, 0.0, 0.12] # proportional spawn
     # [Roll, Pitch, Yaw]
-    # orientation = [0.0, 0.0, -1.5707] # competition spawn
-    orientation = [0.0, 0.0, -2.356] # proportional spawn
+    orientation = [0.0, 0.0, -1.5707] # competition spawn
+    # orientation = [0.0, 0.0, -2.356] # old proportional spawn
     # Base Name or robot
     robot_base_name = "car_assembly"
     ####### DATA INPUT END ##########
