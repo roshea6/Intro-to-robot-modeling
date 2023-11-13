@@ -6,7 +6,7 @@ import math
 def roundExpr(expr, num_digits):
     return expr.xreplace({n : round(n, num_digits) for n in expr.atoms(sympy.Number)})
 
-# sympy.init_printing(wrap_line=False)
+sympy.init_printing(num_columns=275)
 
 # Specity our list of known a and d values
 a_list = [0, -0.6127, -0.5716, 0, 0, 0]
@@ -14,7 +14,11 @@ d_list = [0.128, 0, 0, 0.1639, 0.1157, 0.1922]
 
 # Create symbols for the the alphas and thetas so we can solve with variables
 alpha_0, alpha_1, alpha_2, alpha_3, alpha_4, alpha_5, alpha_n = sympy.symbols("alpha_0, alpha_1, alpha_2, alpha_3, alpha_4, alpha_5, alpha_n")
-theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n = sympy.symbols("theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n")
+# theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n = sympy.symbols("theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n")
+
+# Define thetas as function of t
+t = sympy.Symbol('t')
+theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n = sympy.Function('theta_0')(t), sympy.Function('theta_1')(t), sympy.Function('theta_2')(t), sympy.Function('theta_3')(t), sympy.Function('theta_4')(t), sympy.Function('theta_5')(t), sympy.Function('theta_n')(t),
 
 alpha_list = [alpha_0, alpha_1, alpha_2, alpha_3, alpha_4, alpha_5, alpha_n]
 theta_list = [theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n]
@@ -117,7 +121,8 @@ for idx in range(len(transformation_mats)):
     
     
 jacobian = roundExpr(sympy.Matrix(np.array(jacobian_vecs).transpose()), 5)
-sympy.pprint(jacobian)
+jacobian_dot = jacobian.diff('t')
+sympy.pprint(jacobian_dot)
 exit()  
 
 # Again remove any near 0 values from floating point operations
