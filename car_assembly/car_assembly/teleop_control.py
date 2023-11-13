@@ -26,6 +26,8 @@ class KeyboardControlNode(Node):
 
         self.settings = termios.tcgetattr(sys.stdin)
 
+        self.wheel_radius = .1016
+
     def getKey(self):
         tty.setraw(sys.stdin.fileno())
         rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
@@ -76,12 +78,12 @@ class KeyboardControlNode(Node):
 
 
                 if steer_angle>1.5:
-                        steer_angle=1.5
+                    steer_angle=1.5
                 if steer_angle<-1.5:
                     steer_angle=-1.5
 
                 print("Steer Angle",steer_angle)
-                print("Linear Velocity",linear_vel)
+                print("Linear Velocity",(linear_vel*self.wheel_radius))
                 # Publish the twist message
                 wheel_velocities.data = [linear_vel,-linear_vel,linear_vel,-linear_vel]
                 joint_positions.data = [steer_angle,steer_angle]
