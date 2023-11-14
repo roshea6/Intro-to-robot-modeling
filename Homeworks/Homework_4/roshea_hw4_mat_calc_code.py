@@ -14,11 +14,11 @@ d_list = [0.128, 0, 0, 0.1639, 0.1157, 0.1922]
 
 # Create symbols for the the alphas and thetas so we can solve with variables
 alpha_0, alpha_1, alpha_2, alpha_3, alpha_4, alpha_5, alpha_n = sympy.symbols("alpha_0, alpha_1, alpha_2, alpha_3, alpha_4, alpha_5, alpha_n")
-# theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n = sympy.symbols("theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n")
+theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n = sympy.symbols("theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n")
 
 # Define thetas as function of t
-t = sympy.Symbol('t')
-theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n = sympy.Function('theta_0')(t), sympy.Function('theta_1')(t), sympy.Function('theta_2')(t), sympy.Function('theta_3')(t), sympy.Function('theta_4')(t), sympy.Function('theta_5')(t), sympy.Function('theta_n')(t),
+# t = sympy.Symbol('t')
+# theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n = sympy.Function('theta_0')(t), sympy.Function('theta_1')(t), sympy.Function('theta_2')(t), sympy.Function('theta_3')(t), sympy.Function('theta_4')(t), sympy.Function('theta_5')(t), sympy.Function('theta_n')(t),
 
 alpha_list = [alpha_0, alpha_1, alpha_2, alpha_3, alpha_4, alpha_5, alpha_n]
 theta_list = [theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n]
@@ -28,7 +28,7 @@ alpha_val_list = [math.pi/2, math.pi, math.pi, -math.pi/2, math.pi/2, 0]
 theta_val_list = [math.pi, -math.pi/2, 0, math.pi/2, 0, 0]
 
 # Set to true if you want the matrices to be displayed with thetas as a variable
-evaluate_with_vars = True
+evaluate_with_vars = False
 
 # If we want to actuate a joint define the joint number and the amount to rotate it by
 joint_num_to_rotate = 0
@@ -121,8 +121,10 @@ for idx in range(len(transformation_mats)):
     
     
 jacobian = roundExpr(sympy.Matrix(np.array(jacobian_vecs).transpose()), 5)
-jacobian_dot = jacobian.diff('t')
-sympy.pprint(jacobian_dot)
+# jacobian_dot = jacobian.diff('t')
+left_p_in = (jacobian.H*jacobian) ** -1 * jacobian.H
+right_p_inv = jacobian.H * (jacobian * jacobian.H) **-1
+sympy.pprint(roundExpr(jacobian*right_p_inv, 5))
 exit()  
 
 # Again remove any near 0 values from floating point operations
