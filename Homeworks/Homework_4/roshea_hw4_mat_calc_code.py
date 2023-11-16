@@ -1,10 +1,14 @@
 import sympy
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
 # Rounds values in sympy expressions. Found online 
 def roundExpr(expr, num_digits):
     return expr.xreplace({n : round(n, num_digits) for n in expr.atoms(sympy.Number)})
+
+def deg2Rad(deg_angle):
+    return (deg_angle * (math.pi/180))
 
 sympy.init_printing(num_columns=275)
 
@@ -119,20 +123,82 @@ for idx in range(len(transformation_mats)):
     
     jacobian_vecs.append(j_vec)
     
+# Combine the individual vectors into a matrix to form the jacobian
+jacobian = sympy.Matrix(np.array(jacobian_vecs).transpose())
+
+# Calculate the pseudo inverse of the jacobian so we can use it to calculate joint velocities
+psuedo_inv = jacobian.pinv() #(jacobian.T*jacobian).inv()*jacobian.T 
+psuedo_inv = roundExpr(psuedo_inv, 5)
+# sympy.pprint(jacobian*psuedo_inv)
+
+# ee_pos = jacobian*sympy.Matrix(np.array([0, 0, 0, 0, 0, 0]).transpose())
+# sympy.pprint(ee_pos)
+# exit()  
+
+time_to_comp = 20
+num_steps = 100
+
+# Generate n timestamps between 0 and the end time
+timestamps = np.linspace(0, time_to_comp, num_steps)
+
+# Starting values for the end effector position and velocity
+last_stamp = 0
+x_pos = 0
+z_pos = 1.428
+x_list = []
+z_list = []
+x_dot = 0
+z_dot = 0
+
+joint_angles = [0, 0, 0, 0, 0, 0]
+joint_angle_vels = [0, 0, 0, 0, 0, 0]
+
+# Loop through the timestamps to find the end effector velocity at each timestamp
+# Use the end effector velocity to calculate the joint angle velocities
+for stamp in timestamps:
+    time_diff = (stamp - last_stamp)
+    x_pos += time_diff*x_dot
+    z_pos += time_diff*z_dot
     
-jacobian = roundExpr(sympy.Matrix(np.array(jacobian_vecs).transpose()), 5)
-# jacobian_dot = jacobian.diff('t')
-left_p_in = (jacobian.H*jacobian) ** -1 * jacobian.H
-right_p_inv = jacobian.H * (jacobian * jacobian.H) **-1
-sympy.pprint(roundExpr(jacobian*right_p_inv, 5))
-exit()  
+    x_list.append(x_pos)
+    z_list.append(z_pos)
+    
+    x_dot = -0.0314*np.sin(math.pi/2 + .314*stamp)
+    z_dot = 0.0314*np.cos(math.pi/2 + .314*stamp)
+    
+    # Build the 6x1 end effector state vector
+    ee_vel_state = np.array([x_dot, 0, z_dot, 0, 0, 0]).transpose()
+    
+    # Find the joint angles based on the previous state and vel
+    for idx, angle in enumerate(joint_angles):
+        joint_angle_vels[idx] += joint_angle_vels[idx]*time_diff
+        
+    # TODO: Update the jacobian based on the new angles
+    
+        
+    # Calculate the new joint vels based on the end effector vel
+    joint_angle_vels = psuedo_inv*ee_vel_state
+    
+    print(joint_angle_vels)
+    
+    last_stamp = stamp
+    
+# Produce and display the plot
+plt.plot(x_list, z_list, 'bo')
+plt.title("X, Z Position")
+plt.xlabel("X (m)")
+plt.ylabel("Z (m)")
+plt.ylim((1.2, 1.45))
+plt.xlim(-.125, .125)
+plt.show()
+
 
 # Again remove any near 0 values from floating point operations
-if not evaluate_with_vars:
-    res_mat = roundMatrix(res_mat, 5)
-else: 
-    res_mat = roundExpr(res_mat, 5)
+# if not evaluate_with_vars:
+#     res_mat = roundMatrix(res_mat, 5)
+# else: 
+#     res_mat = roundExpr(res_mat, 5)
     
-# sympy.simplify(res_mat)
-print("Final transformation matrix from frame 0 to n")
-sympy.pprint(res_mat)
+# # sympy.simplify(res_mat)
+# print("Final transformation matrix from frame 0 to n")
+# sympy.pprint(res_mat)
