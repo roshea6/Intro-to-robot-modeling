@@ -33,18 +33,21 @@ class JacobianUtils():
         # Calculated values for alphas and thetas in the home position of the robot
         self.alpha_val_list = [math.pi/2, math.pi, math.pi, -math.pi/2, math.pi/2, 0]
         self.init_theta_val_list = [math.pi, -math.pi/2, 0, math.pi/2, 0, 0]
+        # self.init_theta_val_list = [0, 0, 0, 0, 0, 0]
         self.theta_val_list = self.init_theta_val_list
 
         # Set to true if you want the matrices to be displayed with thetas as a variable
         self.evaluate_with_vars = use_symbols
         
         self.transformation_mats = []
+        self.successive_trans_mats = []
         self.final_trans_mat = None
         
         self.pseudo_inv_j = None
     
     def calculateTransMats(self):
         # Loop through the table and built the individual transformation matrices from frame to frame
+        self.transformation_mats = []
         for idx, entry in enumerate(self.a_list):
             a = entry
             d = self.d_list[idx]
@@ -72,6 +75,7 @@ class JacobianUtils():
         # sympy.pprint(res_mat)
 
         # Multiply the matrices together in the order T1*T2*T3.... to get the final transformation matrix from frame 0 to n
+        self.successive_trans_mats = []
         for idx, trans_mat in enumerate(self.transformation_mats):
             res_mat = res_mat*trans_mat
             
@@ -80,6 +84,9 @@ class JacobianUtils():
             
             else: 
                 res_mat = roundExpr(res_mat, 5)
+                
+            # Keep track of the 0 to i transformation matrices to be used later for jacobian calculations
+            self.successive_trans_mats.append(res_mat)
             
         self.final_trans_mat = res_mat
     
@@ -92,14 +99,17 @@ class JacobianUtils():
         O0 = np.array([0, 0, 0])
         # Grab the translation vector from the final transformation matrix for On
         On = [self.final_trans_mat.row(i)[3] for i in range(3)]
-        for idx in range(len(self.transformation_mats)):
+        
+        # sympy.pprint(self.successive_trans_mats)
+        
+        for idx in range(len(self.successive_trans_mats)):
             # Special case for J1 since the identity matrix isn't stored as the first matrix in the list
             if idx == 0:
                 z_base = z_0
                 O_base = O0
             # Otherwise grab Z and O from the 3rd and 4th columns of the i-1 transformation matrix
             else:
-                trans_mat = self.transformation_mats[idx-1]
+                trans_mat = self.successive_trans_mats[idx-1]
                 z_base = np.array([trans_mat.row(i)[2] for i in range(3)])
                 O_base = np.array([trans_mat.row(i)[3] for i in range(3)])
                 
@@ -119,24 +129,22 @@ class JacobianUtils():
 
         # Calculate the pseudo inverse of the jacobian so we can use it to calculate joint velocities
         psuedo_inv = jacobian.pinv() #(jacobian.T*jacobian).inv()*jacobian.T 
-        psuedo_inv = roundExpr(psuedo_inv, 5)
+        # psuedo_inv = roundExpr(psuedo_inv, 5)
         
         self.pseudo_inv_j = psuedo_inv
     
     # Updates the current joint angles so they can be used to calculate the jacobian at each time step
     def updateThetas(self, new_theta_val_list):
-        self.theta_val_list = self.init_theta_val_list + new_theta_val_list
+        self.theta_val_list = [new_theta_val_list[idx] for idx in range(len(new_theta_val_list))]
 
-j_utils = JacobianUtils()
+j_utils = JacobianUtils(use_symbols=False)
 
 j_utils.calculateInvJacobian()
 
-# ee_pos = jacobian*sympy.Matrix(np.array([0, 0, 0, 0, 0, 0]).transpose())
-# sympy.pprint(ee_pos)
-# exit()  
+plot_3d = False
 
 time_to_comp = 20
-num_steps = 100
+num_steps = 1200
 
 # Generate n timestamps between 0 and the end time
 timestamps = np.linspace(0, time_to_comp, num_steps)
@@ -144,61 +152,78 @@ timestamps = np.linspace(0, time_to_comp, num_steps)
 # Starting values for the end effector position and velocity
 last_stamp = 0
 x_pos = 0
+y_pos = 0.3561
 z_pos = 1.428
 x_list = []
+y_list = []
 z_list = []
 x_dot = 0
 z_dot = 0
 
-joint_angles = [0, 0, 0, 0, 0, 0]
+joint_angles = j_utils.init_theta_val_list
 joint_angle_vels = [0, 0, 0, 0, 0, 0]
 
 # Loop through the timestamps to find the end effector velocity at each timestamp
 # Use the end effector velocity to calculate the joint angle velocities
-for stamp in timestamps:
+for stamp_num, stamp in enumerate(timestamps):
     time_diff = (stamp - last_stamp)
-    x_pos += time_diff*x_dot
-    z_pos += time_diff*z_dot
+    
+    latest_trans = j_utils.final_trans_mat
+    # sympy.pprint(latest_trans)
+    x_pos = latest_trans.row(0)[3]
+    y_pos = latest_trans.row(1)[3]
+    z_pos = latest_trans.row(2)[3]
+    
+    # x_pos += time_diff*x_dot
+    # y_pos += 0
+    # z_pos += time_diff*z_dot
     
     x_list.append(x_pos)
+    y_list.append(y_pos)
     z_list.append(z_pos)
     
     x_dot = -0.0314*np.sin(math.pi/2 + .314*stamp)
     z_dot = 0.0314*np.cos(math.pi/2 + .314*stamp)
     
+    print("X: {} \t Y: {} \t Z: {}".format(x_pos, y_pos, z_pos))
+    
     # Build the 6x1 end effector state vector
     ee_vel_state = np.array([x_dot, 0, z_dot, 0, 0, 0]).transpose()
+    # print(j_utils.pseudo_inv_j.shape)
     
     # Find the joint angles based on the previous state and vel
     for idx, angle in enumerate(joint_angles):
-        joint_angle_vels[idx] += joint_angle_vels[idx]*time_diff
+        joint_angles[idx] += joint_angle_vels[idx]*time_diff
         
-    # TODO: Update the jacobian based on the new angles
+    # Update the jacobian based on the new angles
+    j_utils.updateThetas(joint_angles)
+    j_utils.calculateInvJacobian()
     
-        
+    # if stamp_num > 0:
+    #     print(joint_angle_vels.shape)
     # Calculate the new joint vels based on the end effector vel
-    joint_angle_vels = j_utils.pseudo_inv_j*ee_vel_state
-    
-    print(joint_angle_vels)
+    joint_angle_vels = np.matmul(j_utils.pseudo_inv_j, ee_vel_state)
+    # print(joint_angle_vels)
     
     last_stamp = stamp
     
 # Produce and display the plot
-plt.plot(x_list, z_list, 'bo')
-plt.title("X, Z Position")
-plt.xlabel("X (m)")
-plt.ylabel("Z (m)")
-plt.ylim((1.2, 1.45))
-plt.xlim(-.125, .125)
-plt.show()
-
-
-# Again remove any near 0 values from floating point operations
-# if not evaluate_with_vars:
-#     res_mat = roundMatrix(res_mat, 5)
-# else: 
-#     res_mat = roundExpr(res_mat, 5)
-    
-# # sympy.simplify(res_mat)
-# print("Final transformation matrix from frame 0 to n")
-# sympy.pprint(res_mat)
+if plot_3d:
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    ax.scatter(x_list, y_list, z_list, marker='o')
+    ax.set_title("X, Y, Z Position")
+    ax.set_xlabel("X (m)")
+    ax.set_ylabel("Y (m)")
+    ax.set_zlabel("Z (m)")
+    # plt.ylim((1.2, 1.45))
+    # plt.xlim(-.125, .125)
+    plt.show()
+else:
+    plt.plot(x_list, z_list, 'bo')
+    plt.title("X, Z Position")
+    plt.xlabel("X (m)")
+    plt.ylabel("Z (m)")
+    plt.ylim((1.2, 1.45))
+    plt.xlim(-.125, .125)
+    plt.show()
