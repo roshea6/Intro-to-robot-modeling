@@ -128,7 +128,11 @@ class JacobianUtils():
         jacobian = sympy.Matrix(np.array(jacobian_vecs).transpose())
 
         # Calculate the pseudo inverse of the jacobian so we can use it to calculate joint velocities
-        psuedo_inv = jacobian.pinv() #(jacobian.T*jacobian).inv()*jacobian.T 
+        det = round(jacobian.det(), 5)
+        if det == 0:
+            psuedo_inv = jacobian.pinv() #(jacobian.T*jacobian).inv()*jacobian.T 
+        else:
+            psuedo_inv = jacobian.inv()
         # psuedo_inv = roundExpr(psuedo_inv, 5)
         
         self.pseudo_inv_j = psuedo_inv
