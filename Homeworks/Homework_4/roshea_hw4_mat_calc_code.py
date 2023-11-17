@@ -145,6 +145,7 @@ plot_3d = False
 
 time_to_comp = 20
 num_steps = 1200
+print_every = 100
 
 # Generate n timestamps between 0 and the end time
 timestamps = np.linspace(0, time_to_comp, num_steps)
@@ -185,7 +186,8 @@ for stamp_num, stamp in enumerate(timestamps):
     x_dot = -0.0314*np.sin(math.pi/2 + .314*stamp)
     z_dot = 0.0314*np.cos(math.pi/2 + .314*stamp)
     
-    print("X: {} \t Y: {} \t Z: {}".format(x_pos, y_pos, z_pos))
+    if (stamp_num + 1) % print_every == 0:
+        print("Idx: {} \t X: {} \t Y: {} \t Z: {}".format(stamp_num + 1, x_pos, y_pos, z_pos))
     
     # Build the 6x1 end effector state vector
     ee_vel_state = np.array([x_dot, 0, z_dot, 0, 0, 0]).transpose()
