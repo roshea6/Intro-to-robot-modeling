@@ -1,7 +1,10 @@
 import sympy
 import numpy as np
 import math
+from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+import random
 
 # Rounds values in sympy expressions. Found online 
 def roundExpr(expr, num_digits):
@@ -16,7 +19,7 @@ sympy.init_printing(num_columns=275)
 roundMatrix = lambda m, n: sympy.Matrix([[round(m[x, y], n) for y in range(m.shape[1])] for x in range(m.shape[0])])
 
 class JacobianUtils():
-    def __init__(self, use_symbols=False):
+    def __init__(self, use_symbols=False, display=False):
         # Specity our list of known a and d values
         self.a_list = [0, -0.6127, -0.5716, 0, 0, 0]
         self.d_list = [0.128, 0, 0, 0.1639, 0.1157, 0.1922]
@@ -30,14 +33,20 @@ class JacobianUtils():
 
         self.theta_list = [theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n]
         
+        # Small value in radians to be added to each of the starting thetas
+        max_espilon = 0.00004
+
         # Calculated values for alphas and thetas in the home position of the robot
         self.alpha_val_list = [math.pi/2, math.pi, math.pi, -math.pi/2, math.pi/2, 0]
         self.init_theta_val_list = [math.pi, -math.pi/2, 0, math.pi/2, 0, 0]
+        # Add a small epsilon to each starting angle to prevent large velocity jumps. Recommended by Saksham
+        self.init_theta_val_list = [val + max_espilon*random.uniform(-1, 1) for val in self.init_theta_val_list]
         # self.init_theta_val_list = [0, 0, 0, 0, 0, 0]
         self.theta_val_list = self.init_theta_val_list
 
         # Set to true if you want the matrices to be displayed with thetas as a variable
         self.evaluate_with_vars = use_symbols
+        self.display = display
         
         self.transformation_mats = []
         self.successive_trans_mats = []
@@ -45,9 +54,12 @@ class JacobianUtils():
         
         self.pseudo_inv_j = None
     
+    # Calculates the intermediate i-1 to i homogenous transformation matrices, 0 to i, as well as the final 0 to n matrix
     def calculateTransMats(self):
         # Loop through the table and built the individual transformation matrices from frame to frame
         self.transformation_mats = []
+
+        # Calculate the i-1 to i transformation matrix with values from the DH table
         for idx, entry in enumerate(self.a_list):
             a = entry
             d = self.d_list[idx]
@@ -90,6 +102,7 @@ class JacobianUtils():
             
         self.final_trans_mat = res_mat
     
+    # Uses the most up to date transformation matrices and joint angles to calculate the jacobian matrix and its inverse
     def calculateInvJacobian(self):
         self.calculateTransMats()
         # Calculate the jacobian vectors J1 through n 
@@ -101,7 +114,13 @@ class JacobianUtils():
         On = [self.final_trans_mat.row(i)[3] for i in range(3)]
         
         # sympy.pprint(self.successive_trans_mats)
+
+        if self.display:
+            print("On")
+            sympy.pprint(On)
+            print()
         
+        # Calculate the individual Ji components
         for idx in range(len(self.successive_trans_mats)):
             # Special case for J1 since the identity matrix isn't stored as the first matrix in the list
             if idx == 0:
@@ -112,7 +131,14 @@ class JacobianUtils():
                 trans_mat = self.successive_trans_mats[idx-1]
                 z_base = np.array([trans_mat.row(i)[2] for i in range(3)])
                 O_base = np.array([trans_mat.row(i)[3] for i in range(3)])
-                
+
+            if self.display:
+                print("Z{}".format(idx))
+                sympy.pprint(z_base)  
+                print()
+                print("O{}".format(idx))
+                sympy.pprint(O_base)
+                print()
             # Calculate L (On - Oi-1)
             L = On - O_base
             
@@ -127,7 +153,14 @@ class JacobianUtils():
         # Combine the individual vectors into a matrix to form the jacobian
         jacobian = sympy.Matrix(np.array(jacobian_vecs).transpose())
 
+        if self.display:
+            sympy.pprint(jacobian)
+        
+        if self.evaluate_with_vars:
+            exit()
+
         # Calculate the pseudo inverse of the jacobian so we can use it to calculate joint velocities
+        # Check the determinant to see if we can use the normal inverse or if we need to use the pseudo inverse instead
         det = round(jacobian.det(), 5)
         if det == 0:
             psuedo_inv = jacobian.pinv() #(jacobian.T*jacobian).inv()*jacobian.T 
@@ -141,15 +174,17 @@ class JacobianUtils():
     def updateThetas(self, new_theta_val_list):
         self.theta_val_list = [new_theta_val_list[idx] for idx in range(len(new_theta_val_list))]
 
-j_utils = JacobianUtils(use_symbols=False)
+# Define object for working with the jacobian and calculate the initial one for end effector position estimation
+j_utils = JacobianUtils(use_symbols=False, display=False)
 
 j_utils.calculateInvJacobian()
 
+# Whether to plot in  3D or 2D. 3D plot is very slow especially with high number of steps
 plot_3d = False
 
-time_to_comp = 20
-num_steps = 1200
-print_every = 100
+time_to_comp = 20 # seconds to complete the full circle
+num_steps = 2000 # number of time samples to be taken during time to complete
+print_every = 100 # Print current end effector position every n steps
 
 # Generate n timestamps between 0 and the end time
 timestamps = np.linspace(0, time_to_comp, num_steps)
@@ -173,20 +208,17 @@ joint_angle_vels = [0, 0, 0, 0, 0, 0]
 for stamp_num, stamp in enumerate(timestamps):
     time_diff = (stamp - last_stamp)
     
+    # Grab the latest position of the end effector with respect to the base frame from the full i to n homogenous transformation matrix
     latest_trans = j_utils.final_trans_mat
-    # sympy.pprint(latest_trans)
     x_pos = latest_trans.row(0)[3]
     y_pos = latest_trans.row(1)[3]
     z_pos = latest_trans.row(2)[3]
-    
-    # x_pos += time_diff*x_dot
-    # y_pos += 0
-    # z_pos += time_diff*z_dot
     
     x_list.append(x_pos)
     y_list.append(y_pos)
     z_list.append(z_pos)
     
+    # Calculate the end effector x and z velocities from the parametric circle equation derivatives
     x_dot = -0.0314*np.sin(math.pi/2 + .314*stamp)
     z_dot = 0.0314*np.cos(math.pi/2 + .314*stamp)
     
@@ -205,11 +237,8 @@ for stamp_num, stamp in enumerate(timestamps):
     j_utils.updateThetas(joint_angles)
     j_utils.calculateInvJacobian()
     
-    # if stamp_num > 0:
-    #     print(joint_angle_vels.shape)
     # Calculate the new joint vels based on the end effector vel
     joint_angle_vels = np.matmul(j_utils.pseudo_inv_j, ee_vel_state)
-    # print(joint_angle_vels)
     
     last_stamp = stamp
     
@@ -217,19 +246,20 @@ for stamp_num, stamp in enumerate(timestamps):
 if plot_3d:
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
-    ax.scatter(x_list, y_list, z_list, marker='o')
+    ax.scatter(x_list, y_list, z_list, c='blue')
     ax.set_title("X, Y, Z Position")
     ax.set_xlabel("X (m)")
     ax.set_ylabel("Y (m)")
     ax.set_zlabel("Z (m)")
-    # plt.ylim((1.2, 1.45))
-    # plt.xlim(-.125, .125)
+    ax.set_xlim((-.125, .125))
+    ax.set_ylim((0.2561, 0.4561))
+    ax.set_zlim((1.2, 1.45))
     plt.show()
 else:
     plt.plot(x_list, z_list, 'bo')
     plt.title("X, Z Position")
     plt.xlabel("X (m)")
     plt.ylabel("Z (m)")
+    plt.xlim((-.125, .125))
     plt.ylim((1.2, 1.45))
-    plt.xlim(-.125, .125)
     plt.show()
