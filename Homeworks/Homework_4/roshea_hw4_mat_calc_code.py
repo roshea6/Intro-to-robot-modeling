@@ -3,7 +3,6 @@ import numpy as np
 import math
 from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
-import matplotlib.colors as colors
 import random
 
 # Rounds values in sympy expressions. Found online 
