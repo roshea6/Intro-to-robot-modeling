@@ -59,6 +59,7 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   car_assembly/teleop_control.py
   car_assembly/proportional_controller.py
+  car_assembly/joystick_teleop.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
