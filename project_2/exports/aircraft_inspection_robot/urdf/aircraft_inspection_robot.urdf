@@ -1,0 +1,736 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="aircraft_inspection_robot">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="-0.409821173833434 0.24834698405314 0.186905789650059"
+        rpy="0 0 0" />
+      <mass
+        value="16.3100062980245" />
+      <inertia
+        ixx="0.442677686543008"
+        ixy="-4.25661758844464E-05"
+        ixz="-8.01477314248755E-09"
+        iyy="1.88352843223116"
+        iyz="1.63654344774193E-05"
+        izz="2.08653679036228" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="front_right_wheel_link">
+    <inertial>
+      <origin
+        xyz="-5.59829960167235E-14 1.71109293400917E-10 0.103131389958602"
+        rpy="0 0 0" />
+      <mass
+        value="17.0942965183764" />
+      <inertia
+        ixx="0.267032855143768"
+        ixy="-1.12646160249113E-12"
+        ixz="-5.64889034173173E-10"
+        iyy="0.267032853623031"
+        iyz="9.38468143054185E-12"
+        izz="0.388719266107455" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/front_right_wheel_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.250980392156863 0.250980392156863 0.250980392156863 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/front_right_wheel_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="front_right_wheel_joint"
+    type="continuous">
+    <origin
+      xyz="-0.117597527934808 -0.0373548329643068 0.101609117592568"
+      rpy="-1.57057710899586 -1.01905526588804 3.14140604048142" />
+    <parent
+      link="base_link" />
+    <child
+      link="front_right_wheel_link" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="front_left_wheel_link">
+    <inertial>
+      <origin
+        xyz="-6.09432209558447E-14 1.71113179181503E-10 -0.10313316315041"
+        rpy="0 0 0" />
+      <mass
+        value="17.0942965183763" />
+      <inertia
+        ixx="0.267032855143761"
+        ixy="-1.14495324378565E-12"
+        ixz="5.64901635916011E-10"
+        iyy="0.267032853623031"
+        iyz="-9.36914599586813E-12"
+        izz="0.388719266107462" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/front_left_wheel_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.250980392156863 0.250980392156863 0.250980392156863 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/front_left_wheel_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="front_left_wheel_joint"
+    type="continuous">
+    <origin
+      xyz="-0.117597571165592 0.533998775516627 0.101543464746799"
+      rpy="1.57061905476483 -0.865579426080518 0.00013506316993608" />
+    <parent
+      link="base_link" />
+    <child
+      link="front_left_wheel_link" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="back_right_wheel_link">
+    <inertial>
+      <origin
+        xyz="-6.03961325396085E-14 1.71112679581142E-10 0.103133072201983"
+        rpy="0 0 0" />
+      <mass
+        value="17.0942965183763" />
+      <inertia
+        ixx="0.267032855143761"
+        ixy="-1.14612708765688E-12"
+        ixz="-5.6490011240867E-10"
+        iyy="0.267032853623031"
+        iyz="9.36830866314219E-12"
+        izz="0.388719266107461" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/back_right_wheel_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.250980392156863 0.250980392156863 0.250980392156863 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/back_right_wheel_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="back_right_wheel_joint"
+    type="continuous">
+    <origin
+      xyz="-0.701797527934933 -0.0373531949241711 0.101609113542451"
+      rpy="1.57061607230749 -0.879581000000789 0.000138956671881705" />
+    <parent
+      link="base_link" />
+    <child
+      link="back_right_wheel_link" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="back_left_wheel_link">
+    <inertial>
+      <origin
+        xyz="-5.73430192218893E-14 1.71111347313513E-10 -0.103131061396203"
+        rpy="0 0 0" />
+      <mass
+        value="17.0942965183761" />
+      <inertia
+        ixx="0.267032855143766"
+        ixy="-1.12799030549115E-12"
+        ixz="5.64892005170035E-10"
+        iyy="0.267032853623031"
+        iyz="-9.37929304908262E-12"
+        izz="0.388719266107457" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/back_left_wheel_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.250980392156863 0.250980392156863 0.250980392156863 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/back_left_wheel_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="back_left_wheel_joint"
+    type="continuous">
+    <origin
+      xyz="-0.70179757116575 0.534000833067587 0.101543460648476"
+      rpy="-1.57057031157129 -1.03746333162058 3.14139810362434" />
+    <parent
+      link="base_link" />
+    <child
+      link="back_left_wheel_link" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="top_plate_link">
+    <inertial>
+      <origin
+        xyz="-2.90082402543135E-11 0.0043878381469416 7.41073868937292E-15"
+        rpy="0 0 0" />
+      <mass
+        value="16.7771592854839" />
+      <inertia
+        ixx="1.09903225464032"
+        ixy="-1.03404210589939E-08"
+        ixz="3.53674467239491E-08"
+        iyy="2.66325912479572"
+        iyz="1.73347664347845E-15"
+        izz="1.566461199065" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/top_plate_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.250980392156863 0.250980392156863 0.250980392156863 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/top_plate_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="top_plate_joint"
+    type="fixed">
+    <origin
+      xyz="-0.409697551607141 0.248358589255724 0.412726287085218"
+      rpy="1.57068141924114 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="top_plate_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="arm_base_link">
+    <inertial>
+      <origin
+        xyz="1.35419453428653E-13 0.164974567451507 -1.15671056066802E-09"
+        rpy="0 0 0" />
+      <mass
+        value="16.2102374081522" />
+      <inertia
+        ixx="0.278054099642839"
+        ixy="-4.40438667253986E-14"
+        ixz="1.18827634970848E-16"
+        iyy="0.226366310502593"
+        iyz="6.24174996065835E-10"
+        izz="0.320787148766728" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/arm_base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/arm_base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="arm_base_joint"
+    type="continuous">
+    <origin
+      xyz="0 0.01 0"
+      rpy="3.14158139197888 1.57079625081358 3.14158139197905" />
+    <parent
+      link="top_plate_link" />
+    <child
+      link="arm_base_link" />
+    <axis
+      xyz="0 1 0" />
+  </joint>
+  <link
+    name="arm_link_1">
+    <inertial>
+      <origin
+        xyz="1.02486338554586E-07 0.322611922568042 -2.16155512465233E-05"
+        rpy="0 0 0" />
+      <mass
+        value="25.9953851935799" />
+      <inertia
+        ixx="0.850411062490315"
+        ixy="-1.1256368045174E-06"
+        ixz="-7.66617423389136E-07"
+        iyy="0.113742490546722"
+        iyz="-1.06617847915695E-05"
+        izz="0.800217011730299" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/arm_link_1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/arm_link_1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="arm_link_1_joint"
+    type="continuous">
+    <origin
+      xyz="0 0.3 0"
+      rpy="0 0 0" />
+    <parent
+      link="arm_base_link" />
+    <child
+      link="arm_link_1" />
+    <axis
+      xyz="1 0 0" />
+  </joint>
+  <link
+    name="arm_link_2">
+    <inertial>
+      <origin
+        xyz="5.35095437403932E-09 0.381767529489417 5.38744539078095E-05"
+        rpy="0 0 0" />
+      <mass
+        value="22.8030311855106" />
+      <inertia
+        ixx="0.913689793523493"
+        ixy="-3.34324969643128E-08"
+        ixz="-7.18053432419775E-07"
+        iyy="0.0886361778058626"
+        iyz="-8.45267067143285E-06"
+        izz="0.900616527405022" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/arm_link_2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/arm_link_2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="arm_link_2_joint"
+    type="continuous">
+    <origin
+      xyz="0 0.86 0"
+      rpy="3.1416 0 3.1416" />
+    <parent
+      link="arm_link_1" />
+    <child
+      link="arm_link_2" />
+    <axis
+      xyz="1 0 0" />
+  </joint>
+  <link
+    name="arm_link_3">
+    <inertial>
+      <origin
+        xyz="1.57458450333881E-07 -0.246613073175808 2.36154641909958E-05"
+        rpy="0 0 0" />
+      <mass
+        value="18.4583758499819" />
+      <inertia
+        ixx="0.349736954881592"
+        ixy="-7.07116973353364E-07"
+        ixz="-2.91496186672106E-08"
+        iyy="0.0799779306903578"
+        iyz="-4.8811147516351E-06"
+        izz="0.343060004683076" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/arm_link_3.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/arm_link_3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="arm_link_3_joint"
+    type="continuous">
+    <origin
+      xyz="0 0.95 0"
+      rpy="-3.1416 0 0" />
+    <parent
+      link="arm_link_2" />
+    <child
+      link="arm_link_3" />
+    <axis
+      xyz="1 0 0" />
+  </joint>
+  <link
+    name="camera_holder_link">
+    <inertial>
+      <origin
+        xyz="0.187251012647874 -3.9949793612104E-05 -3.02288749587376E-12"
+        rpy="0 0 0" />
+      <mass
+        value="19.8300644910614" />
+      <inertia
+        ixx="1.36579729580863"
+        ixy="1.08993130478014E-09"
+        ixz="-1.59193743799226E-15"
+        iyy="1.20092006636686"
+        iyz="5.67723131624292E-08"
+        izz="0.450596696746023" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/camera_holder_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.250980392156863 0.250980392156863 0.250980392156863 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/camera_holder_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="camera_holder_joint"
+    type="continuous">
+    <origin
+      xyz="0 -0.6096 0"
+      rpy="-1.5708 0 -1.5708" />
+    <parent
+      link="arm_link_3" />
+    <child
+      link="camera_holder_link" />
+    <axis
+      xyz="1 0 0" />
+  </joint>
+  <link
+    name="camera_link">
+    <inertial>
+      <origin
+        xyz="0.139262314980534 -0.00172631742244522 -0.00419621059518324"
+        rpy="0 0 0" />
+      <mass
+        value="67.6402186866665" />
+      <inertia
+        ixx="7.0592577317398"
+        ixy="0.00160005125590444"
+        ixz="0.022251590779016"
+        iyy="7.1065703493232"
+        iyz="0.000413736466453183"
+        izz="0.72496409449164" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/camera_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/camera_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="camera_joint"
+    type="fixed">
+    <origin
+      xyz="0.152399998573732 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="camera_holder_link" />
+    <child
+      link="camera_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="front_lidar_link">
+    <inertial>
+      <origin
+        xyz="-0.0072549873099933 -0.159524096445024 -5.18934299420515E-08"
+        rpy="0 0 0" />
+      <mass
+        value="21.0173459101461" />
+      <inertia
+        ixx="0.360630213819554"
+        ixy="-0.0108096413980878"
+        ixz="4.79803425570761E-08"
+        iyy="0.186912416456727"
+        iyz="-2.37737605167823E-07"
+        izz="0.361463047566562" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/front_lidar_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/front_lidar_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="front_lidar_joint"
+    type="fixed">
+    <origin
+      xyz="0.30811 0.24834 0.2361"
+      rpy="-1.5709 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="front_lidar_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="rear_lidar_link">
+    <inertial>
+      <origin
+        xyz="-0.00725498516151357 -0.1595240965549 -5.18932853910137E-08"
+        rpy="0 0 0" />
+      <mass
+        value="21.0173459127111" />
+      <inertia
+        ixx="0.360630214140233"
+        ixy="-0.0108096390967667"
+        ixz="4.79968519404199E-08"
+        iyy="0.18691241620145"
+        iyz="-2.37742872944465E-07"
+        izz="0.361463047569038" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/rear_lidar_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://aircraft_inspection_robot/meshes/rear_lidar_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="rear_lidar_joint"
+    type="fixed">
+    <origin
+      xyz="-1.12750155043951 0.248338238939751 0.236097306217156"
+      rpy="-1.57068141924114 0 3.14159265358979" />
+    <parent
+      link="base_link" />
+    <child
+      link="rear_lidar_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+</robot>
