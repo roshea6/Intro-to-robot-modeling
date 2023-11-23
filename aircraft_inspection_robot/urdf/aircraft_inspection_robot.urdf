@@ -93,6 +93,15 @@
           filename="package://aircraft_inspection_robot/meshes/front_right_wheel_link.STL" />
       </geometry>
     </collision>
+    <friction>
+      <ode>
+        <mu>0.0</mu> <!-- Friction coefficient -->
+        <mu2>0.0</mu2> <!-- Second friction coefficient (optional) -->
+        <fdir1>0 0 0</fdir1> <!-- Friction direction (optional) -->
+        <slip1>0.0</slip1> <!-- Slip coefficient for friction direction 1 (optional) -->
+        <slip2>0.0</slip2> <!-- Slip coefficient for friction direction 2 (optional) -->
+      </ode>
+    </friction>
   </link>
   <joint
     name="front_right_wheel_joint"
@@ -146,6 +155,15 @@
           filename="package://aircraft_inspection_robot/meshes/front_left_wheel_link.STL" />
       </geometry>
     </collision>
+    <friction>
+      <ode>
+        <mu>0.0</mu> <!-- Friction coefficient -->
+        <mu2>0.0</mu2> <!-- Second friction coefficient (optional) -->
+        <fdir1>0 0 0</fdir1> <!-- Friction direction (optional) -->
+        <slip1>0.0</slip1> <!-- Slip coefficient for friction direction 1 (optional) -->
+        <slip2>0.0</slip2> <!-- Slip coefficient for friction direction 2 (optional) -->
+      </ode>
+    </friction>
   </link>
   <joint
     name="front_left_wheel_joint"
@@ -199,6 +217,15 @@
           filename="package://aircraft_inspection_robot/meshes/back_right_wheel_link.STL" />
       </geometry>
     </collision>
+    <friction>
+      <ode>
+        <mu>0.0</mu> <!-- Friction coefficient -->
+        <mu2>0.0</mu2> <!-- Second friction coefficient (optional) -->
+        <fdir1>0 0 0</fdir1> <!-- Friction direction (optional) -->
+        <slip1>0.0</slip1> <!-- Slip coefficient for friction direction 1 (optional) -->
+        <slip2>0.0</slip2> <!-- Slip coefficient for friction direction 2 (optional) -->
+      </ode>
+    </friction>
   </link>
   <joint
     name="back_right_wheel_joint"
@@ -252,6 +279,15 @@
           filename="package://aircraft_inspection_robot/meshes/back_left_wheel_link.STL" />
       </geometry>
     </collision>
+    <friction>
+      <ode>
+        <mu>0.0</mu> <!-- Friction coefficient -->
+        <mu2>0.0</mu2> <!-- Second friction coefficient (optional) -->
+        <fdir1>0 0 0</fdir1> <!-- Friction direction (optional) -->
+        <slip1>0.0</slip1> <!-- Slip coefficient for friction direction 1 (optional) -->
+        <slip2>0.0</slip2> <!-- Slip coefficient for friction direction 2 (optional) -->
+      </ode>
+    </friction>
   </link>
   <joint
     name="back_left_wheel_joint"

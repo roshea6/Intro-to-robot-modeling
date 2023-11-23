@@ -54,4 +54,11 @@ endif()
 # Install Python modules
 ament_python_install_package(${PROJECT_NAME})
 
+# Install Python executables
+install(PROGRAMS
+  aircraft_inspection_robot/teleop_control.py
+  aircraft_inspection_robot/joystick_teleop.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_package()
