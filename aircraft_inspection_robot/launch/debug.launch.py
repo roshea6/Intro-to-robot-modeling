@@ -8,7 +8,7 @@ from launch.actions import IncludeLaunchDescription,ExecuteProcess,RegisterEvent
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
-from launch.substitutions import  PathJoinSubstitution
+from launch.substitutions import  PathJoinSubstitution, LaunchConfiguration
 from launch_ros.actions import Node
 
 
@@ -57,15 +57,21 @@ def generate_launch_description():
         [FindPackageShare("aircraft_inspection_robot"), "rviz", "display_default.rviz"]
     )
 
-    rviz_node = Node(
-        package='rviz2',
-        executable='rviz2',
-        output='screen',
-        name='rviz_node',
-        parameters=[{'use_sim_time': True}],
-        arguments=['-d', rviz_config_dir])
+    # rviz_node = Node(
+    #     package='rviz2',
+    #     executable='rviz2',
+    #     output='screen',
+    #     name='rviz_node',
+    #     parameters=[{'use_sim_time': True}],
+    #     arguments=['-d', rviz_config_dir])
 
-    
+    # Launch Decription to Spawn Robot Model 
+    rviz_node = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_gazebo, 'launch',
+                         'display.launch.py'),
+        )
+    )
 
     # Launch Description 
     return LaunchDescription([

@@ -36,8 +36,8 @@ class JacobianUtils():
         max_espilon = 0.00004
 
         # Calculated values for alphas and thetas in the home position of the robot
-        self.alpha_val_list = [-math.pi/2, 0.0, 0.0, -math.pi/2, 0]
-        self.init_theta_val_list = [-math.pi, -math.pi/2, 0.0, -math.pi/2, math.pi/2]
+        self.alpha_val_list = [math.pi/2, 0.0, 0.0, math.pi/2, 0]
+        self.init_theta_val_list = [math.pi, -math.pi/2, 0.0, -math.pi/2, math.pi/2]
         # Add a small epsilon to each starting angle to prevent large velocity jumps. Recommended by Saksham
         self.init_theta_val_list = [val + max_espilon*random.uniform(-1, 1) for val in self.init_theta_val_list]
         # self.init_theta_val_list = [0, 0, 0, 0, 0, 0]
@@ -76,7 +76,7 @@ class JacobianUtils():
             
             # Remove near 0 values to clean up the matrix
             if not self.evaluate_with_vars:
-                trans_mat = roundMatrix(trans_mat, 5)
+                trans_mat = roundMatrix(trans_mat, 4)
             
             self.transformation_mats.append(trans_mat)
             
@@ -160,12 +160,15 @@ class JacobianUtils():
 
         # Calculate the pseudo inverse of the jacobian so we can use it to calculate joint velocities
         # Check the determinant to see if we can use the normal inverse or if we need to use the pseudo inverse instead
-        det = round(jacobian.det(), 5)
-        if det == 0:
-            psuedo_inv = jacobian.pinv() #(jacobian.T*jacobian).inv()*jacobian.T 
-        else:
-            psuedo_inv = jacobian.inv()
+        psuedo_inv = jacobian.pinv()
+        # det = round(jacobian.det(), 5)
+        # if det == 0:
+        #     psuedo_inv = jacobian.pinv() #(jacobian.T*jacobian).inv()*jacobian.T 
+        # else:
+        #     psuedo_inv = jacobian.inv()
         # psuedo_inv = roundExpr(psuedo_inv, 5)
+
+        # sympy.pprint(jacobian)
         
         self.pseudo_inv_j = psuedo_inv
     
