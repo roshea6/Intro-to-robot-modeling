@@ -9,6 +9,8 @@ from std_msgs.msg import Float64MultiArray
 
 import math
 
+from aircraft_inspection_robot.jacobian_utils import JacobianUtils
+
 class JotstickControlNode(Node):
     def __init__(self):
         super().__init__('joystick_control_node')
@@ -35,6 +37,11 @@ class JotstickControlNode(Node):
         self.joint_limits = [(-3.14, 3.14), (-1.57, 1.57), (-1.57, 1.57), (-1.57, 1.57), (-3.14, 3.14)]
 
         self.joint_step_size = 0.01
+
+        self.j_utils = JacobianUtils()
+
+        self.current_ee_pos = [0.0, 0.0, 2.8237]
+        self.current_ee_vel = [0.0, 0.0, 0.0]
 
     def joyCallback(self, joy_msg):
         # Create a blank twist message to populate
