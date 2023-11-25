@@ -121,12 +121,13 @@ class JotstickControlNode(Node):
             # TODO: Figure out a nicer way to do this
             ee_vel = [val for val in self.current_ee_vel]
             ee_vel.extend([0.0, 0.0])
+            ee_vel = [0.1, 0.0, 0.0, 0.0, 0.0, 0.0]
             # print(ee_vel)
             ee_vel = np.array(ee_vel).transpose()
 
             #  Find the joint angles based on the previous state and vel
             # TODO: Update time diff to be calculate time delta between runs
-            time_diff = 0.001
+            time_diff = 0.01
             for idx, angle in enumerate(self.current_joint_angles):
                 self.current_joint_angles[idx] += self.current_joint_angle_vels[idx]*time_diff
 

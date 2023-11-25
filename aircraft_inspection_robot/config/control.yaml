@@ -30,14 +30,9 @@ position_controller:
         - position
         - velocity
 
-
 velocity_controller:
   ros__parameters:
       joints:
-        # - front_left_wheel_joint
-        # - front_right_wheel_joint
-        # - back_left_wheel_joint
-        # - back_right_wheel_joint
         - arm_base_joint
         - arm_link_1_joint
         - arm_link_2_joint
