@@ -185,14 +185,19 @@ class JacobianUtils():
         
     def calcPotEnergy(self):
         total_pot_energy = 0
+        # Define the gravity vector
         g_vec = np.array([0, 0, 9.81]).transpose()
+        # Zip the link masses, center of masses, and the 0 to i transformation matrices and iterate through them
         for link_mass, link_cm, trans_mat in zip(self.link_masses, self.link_cms, self.successive_trans_mats):
-            sympy.pprint(trans_mat)
+            # sympy.pprint(trans_mat)
+            # Extract the translation vector
             t_vec = [trans_mat.row(i)[3] for i in range(3)]
-            print(t_vec)
+            # print(t_vec)
+            # Calculate rci by adding the link center of mass location to the translation vector
             rci = np.array([link_cm[i] + t_vec[i] for i in range(len(link_cm))]).transpose()
-            print(link_cm)
-            print(rci)
+            # print(link_cm)
+            # print(rci)
+            # Calculate potential energy for the link and add it to the total
             total_pot_energy += link_mass*(np.dot(g_vec, rci))
             
         return total_pot_energy
