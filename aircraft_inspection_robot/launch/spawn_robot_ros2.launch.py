@@ -15,7 +15,7 @@ import random
 def generate_launch_description():
 
     ####### DATA INPUT ##########
-    xacro_file = "aircraft_inspection_robot.urdf"
+    xacro_file = "aircraft_inspection_robot.urdf.xacro"
     control_config_file = "control.yaml"
 
     package_description = "aircraft_inspection_robot"
@@ -68,7 +68,7 @@ def generate_launch_description():
         package='aircraft_inspection_robot',
         executable='robot_description_publisher.py',
         name='robot_description_publisher',
-        output='screen',
+        output='log',
         arguments=['-xml_string', xml,
                    '-robot_description_topic', '/robot_description'
                    ]

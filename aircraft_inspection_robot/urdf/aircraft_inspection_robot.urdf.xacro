@@ -1010,6 +1010,41 @@
     </sensor>
   </gazebo>
 
+  <!-- Depth Camera -->
+  <link name="depth_camera_sensor_link"></link>
+  <joint name="depth_camera_sensor_joint" type="fixed">
+    <origin rpy="-1.571 0 0" xyz="0.2 0 0" />
+    <parent link="camera_link"/>
+    <child link="depth_camera_sensor_link"/>
+  </joint>
+  <gazebo reference="depth_camera_sensor_link">
+    <sensor name="depth_camera" type="depth">
+      <camera name="depth_camera">
+        <!-- Camera properties -->
+        <horizontal_fov>1.047</horizontal_fov>
+        <vertical_fov>0.785</vertical_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+        </image>
+        <clip>
+          <near>0.1</near>
+          <far>20.0</far>
+        </clip>
+      </camera>
+
+      <!-- Depth camera Gazebo plugin -->
+      <plugin name="gazebo_ros_depth_camera" filename="libgazebo_ros_camera.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>30.0</updateRate>
+        <cameraName>depth</cameraName>
+        <frameName>depth_camera_sensor_link</frameName>
+        <imageTopicName>image_raw</imageTopicName>
+        <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
   <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
         <parameters>$(find aircraft_inspection_robot)/config/control.yaml</parameters>
