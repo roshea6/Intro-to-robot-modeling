@@ -927,7 +927,7 @@
   <!-- Front LiDAR -->
   <link name="front_lidar_sensor_link"></link>
   <joint name="front_lidar_sensor_joint" type="fixed">
-    <origin rpy="1.571 1.571 0" xyz="0 0.25 0" />
+    <origin rpy="1.571 1.571 0" xyz="0 -0.05 0" />
     <parent link="front_lidar_link"/>
     <child link="front_lidar_sensor_link"/>
   </joint>
