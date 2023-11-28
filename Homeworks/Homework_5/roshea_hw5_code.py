@@ -254,7 +254,7 @@ class JacobianUtils():
         # Substitute the values in to get the actualy value of the potential energy partial derivative matrix
         # Take its negative since the Lagrangian is K - P
         self.gravity_mat = -pot_energy_partials.subs(substitutions)
-        sympy.pprint(self.gravity_mat)
+        # sympy.pprint(self.gravity_mat)
             
         # return pot_energy_partials
     
@@ -263,7 +263,7 @@ class JacobianUtils():
         force_vec = sympy.Matrix(np.array([0.0, 0.0, -5.0, 0.0, 0.0, 0.0]).transpose())
         joint_torques = self.gravity_mat - self.jacobian_T*force_vec
         
-        sympy.pprint(joint_torques)
+        return joint_torques
     
     def calcKinEnergy(self):
         # TODO: Find out how to get inertia tensor
@@ -278,15 +278,11 @@ class JacobianUtils():
 j_utils = JacobianUtils(use_symbols=True, display=False)
 
 j_utils.calculateInvJacobian()
-j_utils.calcPotEnergy()
-j_utils.calcJointTorques()
-
-exit()
 
 # Whether to plot in  3D or 2D. 3D plot is very slow especially with high number of steps
 plot_3d = False
 
-time_to_comp = 20 # seconds to complete the full circle
+time_to_comp = 200 # seconds to complete the full circle
 num_steps = 2000 # number of time samples to be taken during time to complete
 print_every = 100 # Print current end effector position every n steps
 
@@ -307,6 +303,9 @@ z_dot = 0
 joint_angles = j_utils.init_theta_val_list
 joint_angle_vels = [0, 0, 0, 0, 0, 0]
 
+torque_list = [[], [], [], [], [], []]
+
+
 # Loop through the timestamps to find the end effector velocity at each timestamp
 # Use the end effector velocity to calculate the joint angle velocities
 for stamp_num, stamp in enumerate(timestamps):
@@ -322,7 +321,13 @@ for stamp_num, stamp in enumerate(timestamps):
     y_list.append(y_pos)
     z_list.append(z_pos)
     
+    j_utils.calcPotEnergy()
+    torques = np.array(j_utils.calcJointTorques()).astype(np.float64)
+    for joint_torque_list, torque in zip(torque_list, torques):
+        joint_torque_list.append(torque[0]) 
+    
     # Calculate the end effector x and z velocities from the parametric circle equation derivatives
+    # TODO: Update these with the new velocity equations for 200 seconds instead of 20
     x_dot = -0.0314*np.sin(math.pi/2 + .314*stamp)
     z_dot = 0.0314*np.cos(math.pi/2 + .314*stamp)
     
@@ -366,4 +371,11 @@ else:
     plt.ylabel("Z (m)")
     plt.xlim((-.125, .125))
     plt.ylim((1.2, 1.45))
+    plt.show()
+    
+    # TODO: Add label for each joint
+    # TODO: Possibly make 6 different subplots
+    for single_torque_list in torque_list:
+        plt.plot(single_torque_list, timestamps)
+    
     plt.show()
