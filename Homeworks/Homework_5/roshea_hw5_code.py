@@ -34,13 +34,13 @@ class JacobianUtils():
                          [0.0, 0.0, -0.026]]
         
         # Create symbols for the the thetas so we can solve with variables
-        theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n = sympy.symbols("theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n")
+        theta_0, theta_1, theta_2, theta_3, theta_4, theta_5 = sympy.symbols("theta_0, theta_1, theta_2, theta_3, theta_4, theta_5")
         
         # Define thetas as function of t
         # t = sympy.Symbol('t')
         # theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n = sympy.Function('theta_0')(t), sympy.Function('theta_1')(t), sympy.Function('theta_2')(t), sympy.Function('theta_3')(t), sympy.Function('theta_4')(t), sympy.Function('theta_5')(t), sympy.Function('theta_n')(t),
 
-        self.theta_list = [theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n]
+        self.theta_list = [theta_0, theta_1, theta_2, theta_3, theta_4, theta_5]
         
         # Small value in radians to be added to each of the starting thetas
         max_espilon = 0.00004
@@ -67,6 +67,8 @@ class JacobianUtils():
         
         self.pseudo_inv_j = None
         self.jacobian_T = None
+        
+        self.gravity_mat = None
     
     # Calculates the intermediate i-1 to i homogenous transformation matrices, 0 to i, as well as the final 0 to n matrix
     def calculateTransMats(self):
@@ -221,7 +223,8 @@ class JacobianUtils():
     # Updates the current joint angles so they can be used to calculate the jacobian at each time step
     def updateThetas(self, new_theta_val_list):
         self.theta_val_list = [new_theta_val_list[idx] for idx in range(len(new_theta_val_list))]
-        
+    
+    # Calculates the potential energy for each link of the system and then converts it the gravity matrix
     def calcPotEnergy(self):
         total_pot_energy = 0
         # Define the gravity vector
@@ -239,12 +242,28 @@ class JacobianUtils():
             # Calculate potential energy for the link and add it to the total
             total_pot_energy += link_mass*(np.dot(g_vec, rci))
             
+        # Calculate the partial derivative of the potential enerty wrt each of the joint angles
         pot_energy_partials = sympy.Matrix([sympy.diff(total_pot_energy, var) for var in self.theta_list])
         # pot_energy_partials = roundExpr(pot_energy_partials,5)
         
-        sympy.pprint(pot_energy_partials)
+        # sympy.pprint(pot_energy_partials)
+        
+        # Create a list of substitution pairs of the theta variable and the actual theta value
+        substitutions = [(theta_var, theta_val) for theta_var, theta_val in zip(self.theta_list, self.theta_val_list)]
+        
+        # Substitute the values in to get the actualy value of the potential energy partial derivative matrix
+        # Take its negative since the Lagrangian is K - P
+        self.gravity_mat = -pot_energy_partials.subs(substitutions)
+        sympy.pprint(self.gravity_mat)
             
-        return total_pot_energy
+        # return pot_energy_partials
+    
+    # Calculates the torque at each joint based on the gravity matrix, jacobian, and external force vector at the end effector
+    def calcJointTorques(self):
+        force_vec = sympy.Matrix(np.array([0.0, 0.0, -5.0, 0.0, 0.0, 0.0]).transpose())
+        joint_torques = self.gravity_mat - self.jacobian_T*force_vec
+        
+        sympy.pprint(joint_torques)
     
     def calcKinEnergy(self):
         # TODO: Find out how to get inertia tensor
@@ -259,8 +278,8 @@ class JacobianUtils():
 j_utils = JacobianUtils(use_symbols=True, display=False)
 
 j_utils.calculateInvJacobian()
-
-sympy.pprint(j_utils.calcPotEnergy())
+j_utils.calcPotEnergy()
+j_utils.calcJointTorques()
 
 exit()
 
