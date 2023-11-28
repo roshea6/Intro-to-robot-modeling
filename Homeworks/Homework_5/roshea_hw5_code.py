@@ -61,7 +61,12 @@ class JacobianUtils():
         self.successive_trans_mats = []
         self.final_trans_mat = None
         
+        self.var_transformation_mats = []
+        self.var_successive_trans_mats = []
+        self.var_final_trans_mat = None
+        
         self.pseudo_inv_j = None
+        self.jacobian_T = None
     
     # Calculates the intermediate i-1 to i homogenous transformation matrices, 0 to i, as well as the final 0 to n matrix
     def calculateTransMats(self):
@@ -73,10 +78,8 @@ class JacobianUtils():
             a = entry
             d = self.d_list[idx]
             alpha = self.alpha_val_list[idx]
-            if self.evaluate_with_vars:
-                theta = self.theta_list[idx]
-            else:
-                theta = self.theta_val_list[idx]
+           
+            theta = self.theta_val_list[idx]
             
             # Create the unique transformation matrix for a given row from the DH table
             trans_mat = sympy.Matrix([[sympy.cos(theta), -sympy.sin(theta)*sympy.cos(alpha), sympy.sin(theta)*sympy.sin(alpha), a*sympy.cos(theta)],
@@ -84,9 +87,7 @@ class JacobianUtils():
                         [0, sympy.sin(alpha), sympy.cos(alpha), d],
                         [0, 0, 0, 1]])
             
-            # Remove near 0 values to clean up the matrix
-            if not self.evaluate_with_vars:
-                trans_mat = roundMatrix(trans_mat, 5)
+            trans_mat = roundMatrix(trans_mat, 5)
             
             self.transformation_mats.append(trans_mat)
             
@@ -100,16 +101,52 @@ class JacobianUtils():
         for idx, trans_mat in enumerate(self.transformation_mats):
             res_mat = res_mat*trans_mat
             
-            if not self.evaluate_with_vars:
-                res_mat = roundMatrix(res_mat, 5)
-            
-            else: 
-                res_mat = roundExpr(res_mat, 5)
+            res_mat = roundMatrix(res_mat, 5)
                 
             # Keep track of the 0 to i transformation matrices to be used later for jacobian calculations
             self.successive_trans_mats.append(res_mat)
             
         self.final_trans_mat = res_mat
+        
+        # If we're also evaulating with variables calculate it all again
+        if self.evaluate_with_vars:
+             # Loop through the table and built the individual transformation matrices from frame to frame
+            self.var_transformation_mats = []
+
+            # Calculate the i-1 to i transformation matrix with values from the DH table
+            for idx, entry in enumerate(self.a_list):
+                a = entry
+                d = self.d_list[idx]
+                alpha = self.alpha_val_list[idx]
+            
+                theta = self.theta_list[idx]
+                
+                # Create the unique transformation matrix for a given row from the DH table
+                trans_mat = sympy.Matrix([[sympy.cos(theta), -sympy.sin(theta)*sympy.cos(alpha), sympy.sin(theta)*sympy.sin(alpha), a*sympy.cos(theta)],
+                            [sympy.sin(theta), sympy.cos(theta)*sympy.cos(alpha), -sympy.cos(theta)*sympy.sin(alpha), a*sympy.sin(theta)],
+                            [0, sympy.sin(alpha), sympy.cos(alpha), d],
+                            [0, 0, 0, 1]])
+                
+                trans_mat = roundExpr(trans_mat, 5)
+                
+                self.var_transformation_mats.append(trans_mat)
+                
+            # Create a 4x4 identity matrix to use our starting point for matrix multiplication
+            res_mat = sympy.Matrix(np.identity(4))
+                
+            # sympy.pprint(res_mat)
+
+            # Multiply the matrices together in the order T1*T2*T3.... to get the final transformation matrix from frame 0 to n
+            self.var_successive_trans_mats = []
+            for idx, trans_mat in enumerate(self.var_transformation_mats):
+                res_mat = res_mat*trans_mat
+
+                res_mat = roundExpr(res_mat, 5)
+                    
+                # Keep track of the 0 to i transformation matrices to be used later for jacobian calculations
+                self.var_successive_trans_mats.append(res_mat)
+                
+            self.var_final_trans_mat = res_mat
     
     # Uses the most up to date transformation matrices and joint angles to calculate the jacobian matrix and its inverse
     def calculateInvJacobian(self):
@@ -165,8 +202,8 @@ class JacobianUtils():
         if self.display:
             sympy.pprint(jacobian)
         
-        if self.evaluate_with_vars:
-            exit()
+        # if self.evaluate_with_vars:
+        #     continue
 
         # Calculate the pseudo inverse of the jacobian so we can use it to calculate joint velocities
         # Check the determinant to see if we can use the normal inverse or if we need to use the pseudo inverse instead
@@ -178,6 +215,8 @@ class JacobianUtils():
         # psuedo_inv = roundExpr(psuedo_inv, 5)
         
         self.pseudo_inv_j = psuedo_inv
+        
+        self.jacobian_T = jacobian.transpose()
     
     # Updates the current joint angles so they can be used to calculate the jacobian at each time step
     def updateThetas(self, new_theta_val_list):
@@ -188,7 +227,7 @@ class JacobianUtils():
         # Define the gravity vector
         g_vec = np.array([0, 0, 9.81]).transpose()
         # Zip the link masses, center of masses, and the 0 to i transformation matrices and iterate through them
-        for link_mass, link_cm, trans_mat in zip(self.link_masses, self.link_cms, self.successive_trans_mats):
+        for link_mass, link_cm, trans_mat in zip(self.link_masses, self.link_cms, self.var_successive_trans_mats):
             # sympy.pprint(trans_mat)
             # Extract the translation vector
             t_vec = [trans_mat.row(i)[3] for i in range(3)]
@@ -200,20 +239,28 @@ class JacobianUtils():
             # Calculate potential energy for the link and add it to the total
             total_pot_energy += link_mass*(np.dot(g_vec, rci))
             
+        pot_energy_partials = sympy.Matrix([sympy.diff(total_pot_energy, var) for var in self.theta_list])
+        # pot_energy_partials = roundExpr(pot_energy_partials,5)
+        
+        sympy.pprint(pot_energy_partials)
+            
         return total_pot_energy
     
     def calcKinEnergy(self):
+        # TODO: Find out how to get inertia tensor
+        # TODO: Find out what the jacobian vectors are for angular velocity
+        # TODO: Are the jacobian vectors for a link just the vectos that we use for calculating the full jacobian matrix?
         pass
     
     def calcLagrangian(self):
         pass
 
 # Define object for working with the jacobian and calculate the initial one for end effector position estimation
-j_utils = JacobianUtils(use_symbols=False, display=False)
+j_utils = JacobianUtils(use_symbols=True, display=False)
 
 j_utils.calculateInvJacobian()
 
-print(j_utils.calcPotEnergy())
+sympy.pprint(j_utils.calcPotEnergy())
 
 exit()
 
