@@ -28,7 +28,7 @@ class JacobianUtils():
         # These are the relative center of masses for a link. Their position wrt to the robot base will be calculated at each timestep based on current joint angles
         self.link_cms = [[0.021, 0.0, 0.027],
                          [0.38, 0.0, 0.158],
-                         [0.24, 0.0, 0.068],
+                         [0.24, 0.0, -0.068], # The Z value is negative because the Z axis in the example of the UR-10 points the opposite way of mine
                          [0.0, 0.007,0.018],
                          [0.0, 0.007,0.018],
                          [0.0, 0.0, -0.026]]
@@ -69,6 +69,9 @@ class JacobianUtils():
         self.jacobian_T = None
         
         self.gravity_mat = None
+        
+        # Used to setup the symbolic transformation matrices on the first run only
+        self.first_run = True
     
     # Calculates the intermediate i-1 to i homogenous transformation matrices, 0 to i, as well as the final 0 to n matrix
     def calculateTransMats(self):
@@ -112,6 +115,7 @@ class JacobianUtils():
         
         # If we're also evaulating with variables calculate it all again
         if self.evaluate_with_vars:
+            # self.first_run = False
              # Loop through the table and built the individual transformation matrices from frame to frame
             self.var_transformation_mats = []
 
@@ -328,8 +332,8 @@ for stamp_num, stamp in enumerate(timestamps):
     
     # Calculate the end effector x and z velocities from the parametric circle equation derivatives
     # TODO: Update these with the new velocity equations for 200 seconds instead of 20
-    x_dot = -0.0314*np.sin(math.pi/2 + .314*stamp)
-    z_dot = 0.0314*np.cos(math.pi/2 + .314*stamp)
+    x_dot = -0.00314*np.sin(math.pi/2 + .0314*stamp)
+    z_dot = 0.00314*np.cos(math.pi/2 + .0314*stamp)
     
     if (stamp_num + 1) % print_every == 0:
         print("Idx: {} \t X: {} \t Y: {} \t Z: {}".format(stamp_num + 1, x_pos, y_pos, z_pos))
@@ -375,7 +379,13 @@ else:
     
     # TODO: Add label for each joint
     # TODO: Possibly make 6 different subplots
-    for single_torque_list in torque_list:
-        plt.plot(single_torque_list, timestamps)
+    joint_names = ["Joint 0", "Joint 1", "Joint 2", "Joint 3", "Joint 4", "Joint 5",]
+    for single_torque_list, joint_name in zip(torque_list, joint_names):
+        plt.plot(timestamps, single_torque_list, label=joint_name)
+       
+    plt.title("Joint Torques Over Time") 
+    plt.xlabel("Timestamp (s)")
+    plt.ylabel("Torque (N*m)")
+    plt.legend()    
     
     plt.show()
