@@ -286,6 +286,9 @@ j_utils.calculateInvJacobian()
 # Whether to plot in  3D or 2D. 3D plot is very slow especially with high number of steps
 plot_3d = False
 
+# If all the torques should be plotted on the same graph
+plot_single_torque_graph = False
+
 time_to_comp = 200 # seconds to complete the full circle
 num_steps = 2000 # number of time samples to be taken during time to complete
 print_every = 100 # Print current end effector position every n steps
@@ -377,15 +380,36 @@ else:
     plt.ylim((1.2, 1.45))
     plt.show()
     
-    # TODO: Add label for each joint
     # TODO: Possibly make 6 different subplots
     joint_names = ["Joint 0", "Joint 1", "Joint 2", "Joint 3", "Joint 4", "Joint 5",]
-    for single_torque_list, joint_name in zip(torque_list, joint_names):
-        plt.plot(timestamps, single_torque_list, label=joint_name)
-       
-    plt.title("Joint Torques Over Time") 
-    plt.xlabel("Timestamp (s)")
-    plt.ylabel("Torque (N*m)")
-    plt.legend()    
-    
-    plt.show()
+    # Plot all the torques on a single graph
+    if plot_single_torque_graph:
+        for single_torque_list, joint_name in zip(torque_list, joint_names):
+            plt.plot(timestamps, single_torque_list, label=joint_name)
+        
+        plt.title("Joint Torques Over Time") 
+        plt.xlabel("Timestamp (s)")
+        plt.ylabel("Torque (N*m)")
+        plt.legend()    
+        
+        plt.show()
+    # Otherwise make six subplots and plot thee torques separately
+    else:
+        # Iterable list of plot colors
+        plot_colors = iter(['b', 'g', 'r', 'c', 'm', 'y'])
+        
+        n_rows = 2
+        n_cols = 3
+        fig, ax = plt.subplots(nrows=2, ncols=3)
+        for idx, (single_torque_list, joint_name) in enumerate(zip(torque_list, joint_names)):
+            # Calculates row and col number for each plot based on number of rows and cols
+            row_num = 0 if idx <= n_rows else 1
+            col_num = idx - n_cols*row_num
+            ax[row_num, col_num].plot(timestamps, single_torque_list, label=joint_name, color=next(plot_colors))
+            ax[row_num, col_num].set_xlabel("Timestamp (s)")
+            ax[row_num, col_num].set_ylabel("Torque (N*m)")
+            ax[row_num, col_num].set_title(joint_name)
+            
+        fig.suptitle("Joint Torques Over Time")
+        fig.legend()
+        plt.show()
