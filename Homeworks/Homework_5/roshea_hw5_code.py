@@ -12,7 +12,7 @@ def roundExpr(expr, num_digits):
 def deg2Rad(deg_angle):
     return (deg_angle * (math.pi/180))
 
-sympy.init_printing(num_columns=275)
+sympy.init_printing(num_columns=400)
 # Lambda function from Saksham to truncate values in a matrix
 # Removes the super small near zero values that result from floating point operations
 roundMatrix = lambda m, n: sympy.Matrix([[round(m[x, y], n) for y in range(m.shape[1])] for x in range(m.shape[0])])
@@ -235,22 +235,22 @@ class JacobianUtils():
         g_vec = np.array([0, 0, 9.81]).transpose()
         # Zip the link masses, center of masses, and the 0 to i transformation matrices and iterate through them
         for link_mass, link_cm, trans_mat in zip(self.link_masses, self.link_cms, self.var_successive_trans_mats):
-            # sympy.pprint(trans_mat)
             # Extract the translation vector
             t_vec = [trans_mat.row(i)[3] for i in range(3)]
-            # print(t_vec)
+            
             # Calculate rci by adding the link center of mass location to the translation vector
             rci = np.array([link_cm[i] + t_vec[i] for i in range(len(link_cm))]).transpose()
-            # print(link_cm)
-            # print(rci)
+
             # Calculate potential energy for the link and add it to the total
             total_pot_energy += link_mass*(np.dot(g_vec, rci))
             
         # Calculate the partial derivative of the potential enerty wrt each of the joint angles
         pot_energy_partials = sympy.Matrix([sympy.diff(total_pot_energy, var) for var in self.theta_list])
-        # pot_energy_partials = roundExpr(pot_energy_partials,5)
         
-        # sympy.pprint(pot_energy_partials)
+        
+        if self.first_run:
+            sympy.pprint(roundExpr(pot_energy_partials, 4))
+            self.first_run = False
         
         # Create a list of substitution pairs of the theta variable and the actual theta value
         substitutions = [(theta_var, theta_val) for theta_var, theta_val in zip(self.theta_list, self.theta_val_list)]
@@ -258,9 +258,9 @@ class JacobianUtils():
         # Substitute the values in to get the actualy value of the potential energy partial derivative matrix
         # Take its negative since the Lagrangian is K - P
         self.gravity_mat = -pot_energy_partials.subs(substitutions)
+        
         # sympy.pprint(self.gravity_mat)
-            
-        # return pot_energy_partials
+        
     
     # Calculates the torque at each joint based on the gravity matrix, jacobian, and external force vector at the end effector
     def calcJointTorques(self):
@@ -269,14 +269,6 @@ class JacobianUtils():
         
         return joint_torques
     
-    def calcKinEnergy(self):
-        # TODO: Find out how to get inertia tensor
-        # TODO: Find out what the jacobian vectors are for angular velocity
-        # TODO: Are the jacobian vectors for a link just the vectos that we use for calculating the full jacobian matrix?
-        pass
-    
-    def calcLagrangian(self):
-        pass
 
 # Define object for working with the jacobian and calculate the initial one for end effector position estimation
 j_utils = JacobianUtils(use_symbols=True, display=False)
@@ -312,7 +304,6 @@ joint_angle_vels = [0, 0, 0, 0, 0, 0]
 
 torque_list = [[], [], [], [], [], []]
 
-
 # Loop through the timestamps to find the end effector velocity at each timestamp
 # Use the end effector velocity to calculate the joint angle velocities
 for stamp_num, stamp in enumerate(timestamps):
@@ -328,13 +319,15 @@ for stamp_num, stamp in enumerate(timestamps):
     y_list.append(y_pos)
     z_list.append(z_pos)
     
+    # Calculate the system potential energy and gravity matrix
     j_utils.calcPotEnergy()
+    
+    # Calculate the joint torques from the updated gravity matrix and record them
     torques = np.array(j_utils.calcJointTorques()).astype(np.float64)
     for joint_torque_list, torque in zip(torque_list, torques):
         joint_torque_list.append(torque[0]) 
     
     # Calculate the end effector x and z velocities from the parametric circle equation derivatives
-    # TODO: Update these with the new velocity equations for 200 seconds instead of 20
     x_dot = -0.00314*np.sin(math.pi/2 + .0314*stamp)
     z_dot = 0.00314*np.cos(math.pi/2 + .0314*stamp)
     
@@ -380,7 +373,6 @@ else:
     plt.ylim((1.2, 1.45))
     plt.show()
     
-    # TODO: Possibly make 6 different subplots
     joint_names = ["Joint 0", "Joint 1", "Joint 2", "Joint 3", "Joint 4", "Joint 5",]
     # Plot all the torques on a single graph
     if plot_single_torque_graph:
