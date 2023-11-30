@@ -264,7 +264,7 @@ class JacobianUtils():
     
     # Calculates the torque at each joint based on the gravity matrix, jacobian, and external force vector at the end effector
     def calcJointTorques(self):
-        force_vec = sympy.Matrix(np.array([0.0, 0.0, -5.0, 0.0, 0.0, 0.0]).transpose())
+        force_vec = sympy.Matrix(np.array([0.0, -5.0, 0.0, 0.0, 0.0, 0.0]).transpose())
         joint_torques = self.gravity_mat - self.jacobian_T*force_vec
         
         return joint_torques
