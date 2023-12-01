@@ -49,7 +49,7 @@ class JacobianUtils():
         self.alpha_val_list = [math.pi/2, math.pi, math.pi, -math.pi/2, math.pi/2, 0]
         self.init_theta_val_list = [math.pi, -math.pi/2, 0, math.pi/2, 0, 0]
         # Add a small epsilon to each starting angle to prevent large velocity jumps. Recommended by Saksham
-        self.init_theta_val_list = [val + max_espilon*random.uniform(-1, 1) for val in self.init_theta_val_list]
+        # self.init_theta_val_list = [val + max_espilon*random.uniform(-1, 1) for val in self.init_theta_val_list]
         # self.init_theta_val_list = [0, 0, 0, 0, 0, 0]
         self.theta_val_list = self.init_theta_val_list
 
@@ -385,7 +385,7 @@ else:
         plt.legend()    
         
         plt.show()
-    # Otherwise make six subplots and plot thee torques separately
+    # Otherwise make six subplots and plot the torques separately
     else:
         # Iterable list of plot colors
         plot_colors = iter(['b', 'g', 'r', 'c', 'm', 'y'])
