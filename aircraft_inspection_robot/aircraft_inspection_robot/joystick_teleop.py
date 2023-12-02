@@ -121,7 +121,7 @@ class JotstickControlNode(Node):
             # TODO: Figure out a nicer way to do this
             ee_vel = [val for val in self.current_ee_vel]
             ee_vel.extend([0.0, 0.0])
-            ee_vel = [0.1, 0.0, 0.0, 0.0, 0.0, 0.0]
+            ee_vel = [0.01, 0.0, 0.0, 0.0, 0.0, 0.0]
             # print(ee_vel)
             ee_vel = np.array(ee_vel).transpose()
 

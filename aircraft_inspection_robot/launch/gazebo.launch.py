@@ -14,11 +14,11 @@ def generate_launch_description():
     # Get Gazebo ROS interface package
     pkg_gazebo_ros = get_package_share_directory('gazebo_ros')
 
-    # Get the location for empty world
+    # Get the location for aircrafts world
     world = os.path.join(
         get_package_share_directory('aircraft_inspection_robot'),
         'worlds',
-        'empty_world.world'
+        'aircraft_world.world'
     )
 
     # Launch Description to run Gazebo Server
