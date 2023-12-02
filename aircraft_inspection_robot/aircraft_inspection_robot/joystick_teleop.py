@@ -13,7 +13,7 @@ import sympy
 
 from aircraft_inspection_robot.jacobian_utils import JacobianUtils
 
-class JotstickControlNode(Node):
+class JoystickControlNode(Node):
     def __init__(self):
         super().__init__('joystick_control_node')
 
@@ -171,7 +171,7 @@ class JotstickControlNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = JotstickControlNode()
+    node = JoystickControlNode()
     try:
         rclpy.spin(node)
     finally:
