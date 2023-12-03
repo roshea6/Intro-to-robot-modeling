@@ -20,26 +20,26 @@ roundMatrix = lambda m, n: sympy.Matrix([[round(m[x, y], n) for y in range(m.sha
 class JacobianUtils():
     def __init__(self, use_symbols=False, display=False):
         # Specity our list of known a and d values
-        self.a_list = [0, -0.8407, -0.9141, 0, 0]
-        self.d_list = [0.378, 0.0, 0.0, 0.0, 0.6909]
+        self.a_list = [0.0, -0.8001, -0.8001, 0.0, 0.0, 0.0]
+        self.d_list = [0.2413, 0.0, 0.0, 0.4826, 1.1684, 0.5461]
         
         # Create symbols for the the thetas so we can solve with variables
-        theta_0, theta_1, theta_2, theta_3, theta_d, theta_4 = sympy.symbols("theta_0, theta_1, theta_2, theta_3, theta_d, theta_4")
+        theta_0, theta_1, theta_2, theta_3, theta_4, theta_5 = sympy.symbols("theta_0, theta_1, theta_2, theta_3, theta_4, theta_5")
         
         # Define thetas as function of t
         # t = sympy.Symbol('t')
         # theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n = sympy.Function('theta_0')(t), sympy.Function('theta_1')(t), sympy.Function('theta_2')(t), sympy.Function('theta_3')(t), sympy.Function('theta_4')(t), sympy.Function('theta_5')(t), sympy.Function('theta_n')(t),
 
-        self.theta_list = [theta_0, theta_1, theta_2, theta_3, theta_d, theta_4]
+        self.theta_list = [theta_0, theta_1, theta_2, theta_3, theta_4, theta_5]
         
         # Small value in radians to be added to each of the starting thetas
         max_espilon = 0.00004
 
         # Calculated values for alphas and thetas in the home position of the robot
-        self.alpha_val_list = [math.pi/2, 0.0, 0.0, math.pi/2, 0]
-        self.init_theta_val_list = [math.pi, -math.pi/2, 0.0, -math.pi/2, math.pi/2]
+        self.alpha_val_list = [math.pi/2, math.pi, math.pi, -math.pi/2, math.pi/2, 0]
+        self.init_theta_val_list = [math.pi, -math.pi/2, 0, math.pi/2, 0, 0]
         # Add a small epsilon to each starting angle to prevent large velocity jumps. Recommended by Saksham
-        self.init_theta_val_list = [val + max_espilon*random.uniform(-1, 1) for val in self.init_theta_val_list]
+        # self.init_theta_val_list = [val + max_espilon*random.uniform(-1, 1) for val in self.init_theta_val_list]
         # self.init_theta_val_list = [0, 0, 0, 0, 0, 0]
         self.theta_val_list = self.init_theta_val_list
 

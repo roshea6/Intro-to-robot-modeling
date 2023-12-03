@@ -36,19 +36,19 @@ class JoystickControlNode(Node):
         self.velocities_pub = self.create_publisher(Float64MultiArray, '/velocity_controller/commands', 10)
 
         # Robot starts in the home configuration with all joints angles set to 0
-        self.current_joint_states = [0.0, 0.0, 0.0, 0.0, 0.0]
+        self.current_joint_states = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         self.joint_limits = [(-3.14, 3.14), (-1.57, 1.57), (-1.57, 1.57), (-1.57, 1.57), (-3.14, 3.14)]
 
-        self.joint_step_size = 0.1
+        self.joint_step_size = 0.5
 
         self.j_utils = JacobianUtils()
         self.j_utils.calculateInvJacobian()
 
-        self.current_ee_pos = [0.0, 0.0, 2.8237]
+        self.current_ee_pos = [0.0, 1.0287, 3.0099]
         self.current_ee_vel = [0.0, 0.0, 0.0, 0.0]
-        self.current_joint_angles = [0.0, 0.0, 0.0, 0.0, 0.0] #self.j_utils.init_theta_val_list
+        self.current_joint_angles = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] #self.j_utils.init_theta_val_list
         self.offset_joint_angles = self.j_utils.init_theta_val_list
-        self.current_joint_angle_vels = [0.0, 0.0, 0.0, 0.0, 0.0]
+        self.current_joint_angle_vels = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
     def joyCallback(self, joy_msg):
         # Create a blank twist message to populate
@@ -121,7 +121,7 @@ class JoystickControlNode(Node):
             # TODO: Figure out a nicer way to do this
             ee_vel = [val for val in self.current_ee_vel]
             ee_vel.extend([0.0, 0.0])
-            ee_vel = [0.01, 0.0, 0.0, 0.0, 0.0, 0.0]
+            # ee_vel = [0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
             # print(ee_vel)
             ee_vel = np.array(ee_vel).transpose()
 
