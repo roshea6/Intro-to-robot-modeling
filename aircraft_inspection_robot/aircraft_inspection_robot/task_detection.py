@@ -34,8 +34,6 @@ class TagDetectionNode(Node):
         # Tag size in meters
         self.tag_size = 1.0
 
-        self.visualization = True
-
         # Define a custom QoS profile to match the one provided by the IMU
         qos_profile = QoSProfile(
             reliability=QoSReliabilityPolicy.BEST_EFFORT,
@@ -116,14 +114,6 @@ class TagDetectionNode(Node):
         ros_img = self.bridge.cv2_to_imgmsg(cv_img, encoding="passthrough")
 
         self.img_pub.publish(ros_img)
-
-        # if self.visualization:
-        #     cv2.imshow("Pupil tags", cv_img)
-
-        #     k = cv2.waitKey(1)
-        #     if k == ord('q'):  # Hit q to quit
-        #         cv2.destroyAllWindows()
-        #         exit()
 
 
 def main(args=None):

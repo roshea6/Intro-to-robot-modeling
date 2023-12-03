@@ -7,10 +7,16 @@ from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription,ExecuteProcess,RegisterEventHandler
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
+
+from launch_ros.substitutions import FindPackageShare
+from launch_ros.actions import Node
+
+import launch
+import xacro
 
 
 def generate_launch_description():
-
     # Get Gazebo ROS interface package
     pkg_gazebo_ros = get_package_share_directory('gazebo_ros')
 
@@ -39,8 +45,6 @@ def generate_launch_description():
     # Get the package directory 
     pkg_gazebo = get_package_share_directory('aircraft_inspection_robot')
 
-   
-
     # Launch Decription to Spawn Robot Model 
     spawn_robot_world = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -49,8 +53,22 @@ def generate_launch_description():
         )
     )
 
+    # RVIZ Configuration
+    rviz_config_dir = PathJoinSubstitution(
+        [FindPackageShare("aircraft_inspection_robot"), "rviz", "full_sensor_display.rviz"]
+    )
+
+    rviz_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        output='screen',
+        name='rviz_node',
+        parameters=[{'use_sim_time': True}],
+        arguments=['-d', rviz_config_dir])
+
     # Launch Description 
     return LaunchDescription([
+        rviz_node,
         gzserver_cmd,
         gzclient_cmd,
         spawn_robot_world
