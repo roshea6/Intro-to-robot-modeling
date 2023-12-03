@@ -45,6 +45,9 @@ class TagDetectionNode(Node):
         
         self.img_sub = self.create_subscription(Image, "/depth_camera/image_raw", self.imageCallback, qos_profile=qos_profile)
 
+        # Publisher for the results image
+        self.img_pub = self.create_publisher(Image, "/task_img", 10)
+
         self.current_tag = 9999
 
         self.tag_commands = {0: "Full Scan",
@@ -109,13 +112,18 @@ class TagDetectionNode(Node):
             color=(0, 0, 255),
         )
 
-        if self.visualization:
-            cv2.imshow("Pupil tags", cv_img)
+        # Convert to a ros img message and publish it
+        ros_img = self.bridge.cv2_to_imgmsg(cv_img, encoding="passthrough")
 
-            k = cv2.waitKey(1)
-            if k == ord('q'):  # Hit q to quit
-                cv2.destroyAllWindows()
-                exit()
+        self.img_pub.publish(ros_img)
+
+        # if self.visualization:
+        #     cv2.imshow("Pupil tags", cv_img)
+
+        #     k = cv2.waitKey(1)
+        #     if k == ord('q'):  # Hit q to quit
+        #         cv2.destroyAllWindows()
+        #         exit()
 
 
 def main(args=None):

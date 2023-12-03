@@ -20,7 +20,7 @@ def generate_launch_description():
     xacro_file = "aircraft_inspection_robot.urdf.xacro"
     #xacro_file = "box_bot.xacro"
     package_description = "aircraft_inspection_robot"
-    use_urdf = True
+    use_urdf = False
     # Position and orientation
     # [X, Y, Z]
     position = [0.0, 0.0, 0.5]
