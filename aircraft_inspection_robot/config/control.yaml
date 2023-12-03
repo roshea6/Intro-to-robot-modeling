@@ -22,7 +22,8 @@ position_controller:
         - arm_link_1_joint
         - arm_link_2_joint
         - arm_link_3_joint
-        - camera_holder_joint
+        - arm_link_4_joint
+        - arm_link_5_joint
       interface_name: position
       command_interfaces:
         - position
