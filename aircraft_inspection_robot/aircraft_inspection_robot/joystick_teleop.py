@@ -30,6 +30,7 @@ class JoystickControlNode(Node):
         self.vel_pub = self.create_publisher(Twist, '/cmd_vel', 10)
 
         self.joy_thresh = 0.25
+        self.vel_mul = 3.0
         self.command_maxes = {"x_trans": 2.0, "y_trans": 2.0, "z_rot": math.pi/2}
 
         # Publisher for arm joints
@@ -70,21 +71,21 @@ class JoystickControlNode(Node):
             # Extract left stick vertical axis for forwards and backwards
             left_vert = joy_msg.axes[1]
             if left_vert < -self.joy_thresh or left_vert > self.joy_thresh:
-                twist_msg.linear.x = left_vert*self.command_maxes["x_trans"]
+                twist_msg.linear.x = self.vel_mul*left_vert*self.command_maxes["x_trans"]
             else:
                 twist_msg.linear.x = 0.0
 
             # Extract left stick horizontal axis for left and right movement
             left_horiz = joy_msg.axes[0] 
             if left_horiz < -self.joy_thresh or left_horiz > self.joy_thresh:
-                twist_msg.linear.y = left_horiz*self.command_maxes["y_trans"]
+                twist_msg.linear.y = self.vel_mul*left_horiz*self.command_maxes["y_trans"]
             else:
                 twist_msg.linear.y = 0.0
 
             # Extract right stick horizontal axis for rotation about the Z axis
             right_horiz = joy_msg.axes[3]
             if right_horiz < -self.joy_thresh or right_horiz > self.joy_thresh:
-                twist_msg.angular.z = right_horiz*self.command_maxes["z_rot"]
+                twist_msg.angular.z = self.vel_mul*right_horiz*self.command_maxes["z_rot"]
             else:
                 twist_msg.angular.z = 0.0
         # Otherwise publish 0 vels
@@ -122,7 +123,7 @@ class JoystickControlNode(Node):
             # Extract right stick vertical axis for end effector x movement
             right_vert = joy_msg.axes[4]
             if right_vert < -self.joy_thresh or right_vert > self.joy_thresh:
-                self.current_ee_vel[0] = self.joint_step_size*right_vert
+                self.current_ee_vel[0] = 3*self.joint_step_size*right_vert
             else:
                 self.current_ee_vel[0] = 0.0
 
