@@ -43,10 +43,10 @@ class ControlNode(Node):
         # exit()
 
         # Whether to plot in  3D or 2D. 3D plot is very slow especially with high number of steps
-        plot_3d = False
+        plot_3d = True
 
         time_to_comp = 20 # seconds to complete the full circle
-        num_steps = 200 # number of time samples to be taken during time to complete
+        num_steps = 1000 # number of time samples to be taken during time to complete
         print_every = 100 # Print current end effector position every n steps
 
         # Generate n timestamps between 0 and the end time
@@ -83,14 +83,15 @@ class ControlNode(Node):
             z_list.append(z_pos)
             
             # Calculate the end effector x and z velocities from the parametric circle equation derivatives
-            x_dot = -0.0314*np.sin(math.pi/2 + .314*stamp)
-            z_dot = 0.0314*np.cos(math.pi/2 + .314*stamp)
+            x_dot = -0.157*np.sin(math.pi/2 + .314*stamp)
+            y_dot = 0.157*np.cos(math.pi/2 + .314*stamp)
+            z_dot = 0.157*np.cos(math.pi/2 + .314*stamp)
             
             if (stamp_num + 1) % print_every == 0:
                 print("Idx: {} \t X: {} \t Y: {} \t Z: {}".format(stamp_num + 1, x_pos, y_pos, z_pos))
             
             # Build the 6x1 end effector state vector
-            ee_vel_state = np.array([x_dot, 0, z_dot, 0, 0, 0]).transpose()
+            ee_vel_state = np.array([x_dot, y_dot, z_dot, 0, 0, 0]).transpose()
             # print(j_utils.pseudo_inv_j.shape)
             
             # Find the joint angles based on the previous state and vel
@@ -131,13 +132,27 @@ class ControlNode(Node):
             # print("EE Position {}".format(ee_pos))
             # print()
 
-        plt.plot(x_list, z_list, 'bo')
-        plt.title("X, Z Position")
-        plt.xlabel("X (m)")
-        plt.ylabel("Z (m)")
-        # plt.xlim((-.125, .125))
-        # plt.ylim((1.2, 1.45))
-        plt.show()
+        # Produce and display the plot
+        if plot_3d:
+            fig = plt.figure()
+            ax = fig.add_subplot(projection='3d')
+            ax.scatter(x_list, y_list, z_list, c='blue')
+            ax.set_title("X, Y, Z Position")
+            ax.set_xlabel("X (m)")
+            ax.set_ylabel("Y (m)")
+            ax.set_zlabel("Z (m)")
+            # ax.set_xlim((-.125, .125))
+            # ax.set_ylim((0.2561, 0.4561))
+            # ax.set_zlim((1.2, 1.45))
+            plt.show()
+        else:
+            plt.plot(x_list, z_list, 'bo')
+            plt.title("X, Z Position")
+            plt.xlabel("X (m)")
+            plt.ylabel("Z (m)")
+            # plt.xlim((-.125, .125))
+            # plt.ylim((1.2, 1.45))
+            plt.show()
         
 
 
