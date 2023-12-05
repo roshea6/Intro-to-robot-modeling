@@ -33,13 +33,13 @@ class JacobianUtils():
         self.theta_list = [theta_0, theta_1, theta_2, theta_3, theta_4, theta_5]
         
         # Small value in radians to be added to each of the starting thetas
-        max_espilon = 0.00004
+        max_espilon = 0.0004
 
         # Calculated values for alphas and thetas in the home position of the robot
         self.alpha_val_list = [math.pi/2, math.pi, math.pi, -math.pi/2, math.pi/2, 0]
         self.init_theta_val_list = [math.pi, -math.pi/2, 0, math.pi/2, 0, 0]
         # Add a small epsilon to each starting angle to prevent large velocity jumps. Recommended by Saksham
-        # self.init_theta_val_list = [val + max_espilon*random.uniform(-1, 1) for val in self.init_theta_val_list]
+        self.init_theta_val_list = [val + max_espilon*random.uniform(-1, 1) for val in self.init_theta_val_list]
         # self.init_theta_val_list = [0, 0, 0, 0, 0, 0]
         self.theta_val_list = self.init_theta_val_list
 
@@ -160,12 +160,12 @@ class JacobianUtils():
 
         # Calculate the pseudo inverse of the jacobian so we can use it to calculate joint velocities
         # Check the determinant to see if we can use the normal inverse or if we need to use the pseudo inverse instead
-        psuedo_inv = jacobian.pinv()
-        # det = round(jacobian.det(), 5)
-        # if det == 0:
-        #     psuedo_inv = jacobian.pinv() #(jacobian.T*jacobian).inv()*jacobian.T 
-        # else:
-        #     psuedo_inv = jacobian.inv()
+        # psuedo_inv = jacobian.pinv()
+        det = round(jacobian.det(), 5)
+        if det == 0:
+            psuedo_inv = jacobian.pinv() #(jacobian.T*jacobian).inv()*jacobian.T 
+        else:
+            psuedo_inv = jacobian.inv()
         # psuedo_inv = roundExpr(psuedo_inv, 5)
 
         # sympy.pprint(jacobian)
@@ -176,4 +176,17 @@ class JacobianUtils():
     def updateThetas(self, new_theta_val_list):
         self.theta_val_list = [new_theta_val_list[idx] for idx in range(len(new_theta_val_list))]
 
+if __name__ == "__main__":
+    # Define object for working with the jacobian and calculate the initial one for end effector position estimation
+    j_utils = JacobianUtils(use_symbols=False, display=False)
 
+    j_utils.calculateInvJacobian()
+
+    sympy.pprint(j_utils.pseudo_inv_j)
+
+    # for idx, trans_mat in enumerate(j_utils.transformation_mats):
+    #     print("{} to {}".format(idx, idx+1))
+    #     sympy.pprint(trans_mat)
+    #     print()
+
+    # sympy.pprint(j_utils.final_trans_mat)

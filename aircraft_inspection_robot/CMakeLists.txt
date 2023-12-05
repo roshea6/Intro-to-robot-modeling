@@ -57,6 +57,7 @@ ament_python_install_package(${PROJECT_NAME})
 # Install Python executables
 install(PROGRAMS
   aircraft_inspection_robot/teleop_control.py
+  aircraft_inspection_robot/circular_trajectory_val.py
   aircraft_inspection_robot/joystick_teleop.py
   aircraft_inspection_robot/task_detection.py
   DESTINATION lib/${PROJECT_NAME}

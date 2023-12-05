@@ -10,6 +10,7 @@ from std_msgs.msg import Float64MultiArray
 import math
 import numpy as np
 import sympy
+import matplotlib.pyplot as plt
 
 from aircraft_inspection_robot.jacobian_utils import JacobianUtils
 
@@ -49,6 +50,16 @@ class JoystickControlNode(Node):
         self.current_joint_angles = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] #self.j_utils.init_theta_val_list
         self.offset_joint_angles = self.j_utils.init_theta_val_list
         self.current_joint_angle_vels = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+        self.test_joint_angles = []
+
+        time_to_comp = 20 # seconds to complete the full circle
+        self.num_steps = 2000 # number of time samples to be taken during time to complete
+        self.current_step = 0
+
+        # Generate n timestamps between 0 and the end time
+        self.timestamps = np.linspace(0, time_to_comp, self.num_steps)
+
 
     def joyCallback(self, joy_msg):
         # Create a blank twist message to populate
@@ -115,19 +126,18 @@ class JoystickControlNode(Node):
             else:
                 self.current_ee_vel[0] = 0.0
 
-            print("Current ee vel {}".format(self.current_ee_vel))
-
             # Have to copy the values in a weird way so we don't alter the underlying matrix
             # TODO: Figure out a nicer way to do this
             ee_vel = [val for val in self.current_ee_vel]
             ee_vel.extend([0.0, 0.0])
-            # ee_vel = [0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+            ee_vel = [-0.5, 0.0, -0.5, 0.0, 0.0, 0.0]
             # print(ee_vel)
-            ee_vel = np.array(ee_vel).transpose()
+            # ee_vel = np.array(ee_vel).transpose()
+            print("Current ee vel {}".format(ee_vel))
 
             #  Find the joint angles based on the previous state and vel
             # TODO: Update time diff to be calculate time delta between runs
-            time_diff = 0.01
+            time_diff = 0.0001
             for idx, angle in enumerate(self.current_joint_angles):
                 self.current_joint_angles[idx] += self.current_joint_angle_vels[idx]*time_diff
 
@@ -136,13 +146,15 @@ class JoystickControlNode(Node):
             print("Offset arm angles: {}".format(new_internal_arm_angles))
 
             # Update the jacobian based on the new angles
-            self.j_utils.updateThetas(self.current_joint_angles)
+            self.j_utils.updateThetas(new_internal_arm_angles)
             self.j_utils.calculateInvJacobian()
 
             # sympy.pprint(self.j_utils.pseudo_inv_j)
 
             # print(ee_vel)
             
+            # print("Inverse Jacobian")
+            # sympy.pprint(self.j_utils.pseudo_inv_j)
             # Calculate the new joint vels based on the end effector vel
             self.current_joint_angle_vels = np.matmul(self.j_utils.pseudo_inv_j, ee_vel)
 
@@ -150,12 +162,52 @@ class JoystickControlNode(Node):
 
             # print(self.current_joint_angles)
 
-            new_joint_angles = [float(round(angle, 4)) for angle in self.current_joint_angles]
+            new_joint_angles = [float(angle) for angle in self.current_joint_angles]
 
             print("New joint angles: {}".format(new_joint_angles))
             new_joint_positions.data = new_joint_angles
 
             self.joint_position_pub.publish(new_joint_positions)
+
+            # for idx, trans_mat in enumerate(self.j_utils.transformation_mats):
+            #     print("{} to {}".format(idx, idx+1))
+            #     sympy.pprint(trans_mat)
+            #     print()
+
+
+            sympy.pprint(self.j_utils.final_trans_mat)
+
+            print("Joint vels {}".format(self.current_joint_angle_vels))
+            print("Relative arm angles {}".format(new_joint_angles))
+            print("Internal arm angles {}".format(self.j_utils.theta_val_list))
+
+            ee_pos = [self.j_utils.final_trans_mat.row(i)[3] for i in range(3)]
+
+            print("EE Position {}".format(ee_pos))
+            print()
+
+            # ee_x, ee_y, ee_z = ee_pos[0], ee_pos[1], ee_pos[2]
+
+            # self.test_joint_angles.append(ee_pos)
+
+            # fig = plt.figure()
+            # ax = fig.add_subplot(projection='3d')
+            # ax.scatter(ee_x, ee_y, ee_z, c='blue')
+            # ax.set_title("X, Y, Z Position")
+            # ax.set_xlabel("X (m)")
+            # ax.set_ylabel("Y (m)")
+            # ax.set_zlabel("Z (m)")
+            # # ax.set_xlim((-.125, .125))
+            # # ax.set_ylim((0.2561, 0.4561))
+            # # ax.set_zlim((1.2, 1.45))
+            # plt.show()
+
+            # new_joint_vels = Float64MultiArray()
+
+            # vels = [float(round(vel, 4)) for vel in self.current_joint_angle_vels]
+            # new_joint_vels.data = vels
+
+            # self.velocities_pub.publish(new_joint_vels)
             
     
 

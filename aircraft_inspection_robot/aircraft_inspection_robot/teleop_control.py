@@ -5,11 +5,21 @@ from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64MultiArray
 from sensor_msgs.msg import JointState
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
+from sensor_msgs.msg import Joy
+
 import sys
 import select
 import tty
 import termios
 from pynput import keyboard
+
+import math
+import numpy as np
+import sympy
+
+from aircraft_inspection_robot.jacobian_utils import JacobianUtils
+
 
 # Define key codes
 LIN_VEL_STEP_SIZE = 1
@@ -25,6 +35,19 @@ class KeyboardControlNode(Node):
         self.joint_state_pub = self.create_publisher(JointState, '/joint_states', 10)
 
         self.settings = termios.tcgetattr(sys.stdin)
+
+        self.current_joint_states = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+        self.j_utils = JacobianUtils()
+        self.j_utils.calculateInvJacobian()
+
+        self.current_ee_pos = [0.0, 1.0287, 3.0099]
+        self.current_ee_vel = [0.0, 0.0, 0.0, 0.0]
+        self.current_joint_angles = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] #self.j_utils.init_theta_val_list
+        self.offset_joint_angles = self.j_utils.init_theta_val_list
+        self.current_joint_angle_vels = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+        self.base_move_dict = {"w": ("x", 1), "s": ("x", -1), "a": ("y", 1), "d": ("y", -1), "q": ("z", 1), "e": ("z", -1)}
 
         self.wheel_radius = .1016
 
