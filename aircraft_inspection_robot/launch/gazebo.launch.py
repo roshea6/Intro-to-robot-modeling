@@ -55,7 +55,7 @@ def generate_launch_description():
 
     # RVIZ Configuration
     rviz_config_dir = PathJoinSubstitution(
-        [FindPackageShare("aircraft_inspection_robot"), "rviz", "full_sensor_display.rviz"]
+        [FindPackageShare("aircraft_inspection_robot"), "rviz", "new_full_sensor_display.rviz"]
     )
 
     rviz_node = Node(

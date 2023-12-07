@@ -14,7 +14,7 @@
         xyz="-0.40974645535857 0.24834344494391 0.242010590101945"
         rpy="0 0 0" />
       <mass
-        value="52.3239752391313" />
+        value="152.3239752391313" />
       <inertia
         ixx="0.952539519630922"
         ixy="-4.26200364814785E-05"
@@ -195,9 +195,9 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
-        <!-- <cylinder radius="0.2534" length="0.2032"/> -->
-        <mesh
-          filename="package://aircraft_inspection_robot/meshes/front_right_wheel_link.STL" />
+        <cylinder radius="0.2281" length="0.2032"/>
+        <!-- <mesh
+          filename="package://aircraft_inspection_robot/meshes/front_right_wheel_link.STL" /> -->
       </geometry>
     </collision>
   </link>
@@ -218,7 +218,7 @@
     name="front_left_wheel_link">
     <inertial>
       <origin
-        xyz="1.06668829737838E-07 -1.81805510673927E-07 -0.674003005040707"
+        xyz="1.06668829737838E-07 -1.81805510673927E-07 -0.102621158507274"
         rpy="0 0 0" />
       <mass
         value="26.0463242126014" />
@@ -235,8 +235,9 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
-        <mesh
-          filename="package://aircraft_inspection_robot/meshes/front_left_wheel_link.STL" />
+        <cylinder radius="0.2281" length="0.2032"/>
+        <!-- <mesh
+          filename="package://aircraft_inspection_robot/meshes/front_left_wheel_link.STL" /> -->
       </geometry>
       <material
         name="">
@@ -249,9 +250,9 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
-        <!-- <cylinder radius="0.2534" length="0.2032"/> -->
-        <mesh
-          filename="package://aircraft_inspection_robot/meshes/front_left_wheel_link.STL" />
+        <cylinder radius="0.2281" length="0.2032"/>
+        <!-- <mesh
+          filename="package://aircraft_inspection_robot/meshes/front_left_wheel_link.STL" /> -->
       </geometry>
     </collision>
   </link>
@@ -259,7 +260,7 @@
     name="front_left_wheel_joint"
     type="continuous">
     <origin
-      xyz="-0.117597527933808 -0.0373680425515616 0.10160911911045"
+      xyz="-0.117597527933808 0.67 0.10160911911045"
       rpy="1.57056878031369 -1.04143176730992 0.000196477434083904" />
     <parent
       link="base_link" />
@@ -303,9 +304,9 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
-        <!-- <cylinder radius="0.2534" length="0.2032"/> -->
-        <mesh
-          filename="package://aircraft_inspection_robot/meshes/back_right_wheel_link.STL" />
+        <cylinder radius="0.2281" length="0.2032"/>
+        <!-- <mesh
+          filename="package://aircraft_inspection_robot/meshes/back_right_wheel_link.STL" /> -->
       </geometry>
     </collision>
   </link>
@@ -326,7 +327,7 @@
     name="back_left_wheel_link">
     <inertial>
       <origin
-        xyz="1.29034836829356E-07 -2.66555836092586E-06 -0.673983123389094"
+        xyz="1.29034836829356E-07 -2.66555836092586E-06 -0.102621158507274"
         rpy="0 0 0" />
       <mass
         value="26.0463122941313" />
@@ -343,8 +344,9 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
-        <mesh
-          filename="package://aircraft_inspection_robot/meshes/back_left_wheel_link.STL" />
+        <cylinder radius="0.2281" length="0.2032"/>
+        <!-- <mesh
+          filename="package://aircraft_inspection_robot/meshes/back_left_wheel_link.STL" /> -->
       </geometry>
       <material
         name="">
@@ -357,9 +359,9 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
-        <!-- <cylinder radius="0.2534" length="0.2032"/> -->
-        <mesh
-          filename="package://aircraft_inspection_robot/meshes/back_left_wheel_link.STL" />
+        <cylinder radius="0.2281" length="0.2032"/>
+        <!-- <mesh
+          filename="package://aircraft_inspection_robot/meshes/back_left_wheel_link.STL" /> -->
       </geometry>
     </collision>
   </link>
@@ -367,7 +369,7 @@
     name="back_left_wheel_joint"
     type="continuous">
     <origin
-      xyz="-0.701797527935311 -0.0373482051170577 0.101609112969085"
+      xyz="-0.701797527935311 0.67 0.101609112969085"
       rpy="1.56727528936655 -1.5381898923507 0.00352290998991109" />
     <parent
       link="base_link" />
@@ -748,7 +750,7 @@
       xyz="0 1 0" />
   </joint>
 
-  <gazebo>
+  <!-- <gazebo>
     <plugin name="object_controller" filename="libgazebo_ros_planar_move.so">
       <ros>
         <argument>odom:=odom/unfiltered</argument>
@@ -761,9 +763,9 @@
       <publish_odom>true</publish_odom>
       <publish_odom_tf>true</publish_odom_tf>
     </plugin>
-  </gazebo>
+  </gazebo> -->
 
-  <gazebo reference="front_right_wheel_link">
+  <!-- <gazebo reference="front_right_wheel_link">
     <material>Gazebo/Black</material>
     <mu1 value="0.001"/>
     <mu2 value="0.001"/>
@@ -785,7 +787,7 @@
     <material>Gazebo/Black</material>
     <mu1 value="0.001"/>
     <mu2 value="0.001"/>
-  </gazebo>
+  </gazebo> -->
 
   <!-- ROS Gazebo controls -->
   <ros2_control name="GazeboSystem" type="system">
@@ -796,7 +798,7 @@
     <!-- Velocity controllers -->
 
     <!-- Front Wheels -->
-    <!-- <joint name="front_right_wheel_joint">
+    <joint name="front_right_wheel_joint">
         <command_interface name="velocity">
             <param name="min">-1000.0</param>
             <param name="max">1000.0</param>
@@ -830,7 +832,7 @@
         </command_interface>
         <state_interface name="position"/>
         <state_interface name="velocity"/>
-    </joint> -->
+    </joint>
 
     <!-- Position Controllers -->
     <joint name="arm_base_joint">

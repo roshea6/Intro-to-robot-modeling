@@ -30,7 +30,7 @@ class JoystickControlNode(Node):
         self.vel_pub = self.create_publisher(Twist, '/cmd_vel', 10)
 
         self.joy_thresh = 0.25
-        self.vel_mul = 3.0
+        self.vel_mul = 2.0
         self.command_maxes = {"x_trans": 2.0, "y_trans": 2.0, "z_rot": math.pi/2}
 
         # Publisher for arm joints
@@ -61,40 +61,42 @@ class JoystickControlNode(Node):
         # Generate n timestamps between 0 and the end time
         self.timestamps = np.linspace(0, time_to_comp, self.num_steps)
 
+        # Robot params for skid steering setup
+        self.wheel_radius = 0.4562
+        self.wheel_base = 0.73025
 
     def joyCallback(self, joy_msg):
         # Create a blank twist message to populate
-        twist_msg = Twist()
+        # twist_msg = Twist()
         
         # Check deadman switch, RB, to see if we should accept joystick input
         if joy_msg.buttons[5]:
             # Extract left stick vertical axis for forwards and backwards
             left_vert = joy_msg.axes[1]
             if left_vert < -self.joy_thresh or left_vert > self.joy_thresh:
-                twist_msg.linear.x = self.vel_mul*left_vert*self.command_maxes["x_trans"]
+                forward_vel = self.vel_mul*left_vert
             else:
-                twist_msg.linear.x = 0.0
-
-            # Extract left stick horizontal axis for left and right movement
-            left_horiz = joy_msg.axes[0] 
-            if left_horiz < -self.joy_thresh or left_horiz > self.joy_thresh:
-                twist_msg.linear.y = self.vel_mul*left_horiz*self.command_maxes["y_trans"]
-            else:
-                twist_msg.linear.y = 0.0
+                forward_vel = 0
 
             # Extract right stick horizontal axis for rotation about the Z axis
             right_horiz = joy_msg.axes[3]
             if right_horiz < -self.joy_thresh or right_horiz > self.joy_thresh:
-                twist_msg.angular.z = self.vel_mul*right_horiz*self.command_maxes["z_rot"]
+                rot_vel = 2*self.vel_mul*right_horiz
             else:
-                twist_msg.angular.z = 0.0
-        # Otherwise publish 0 vels
-        else:
-            twist_msg.linear.x = 0.0
-            twist_msg.linear.y = 0.0
-            twist_msg.angular.z = 0.0
+                rot_vel = 0
 
-        self.vel_pub.publish(twist_msg)
+            # Calculate the left and right side wheel velocities
+            left_vel = -(forward_vel - rot_vel*self.wheel_base/2.0)/self.wheel_radius
+            right_vel = -(forward_vel + rot_vel*self.wheel_base/2.0)/self.wheel_radius
+
+            # Create the joint velocities message, populate, and publish it
+            wheel_vel_msg = Float64MultiArray()
+
+            wheel_vels = [right_vel, left_vel, right_vel, left_vel]
+
+            wheel_vel_msg.data = wheel_vels
+
+            self.velocities_pub.publish(wheel_vel_msg)
 
         # Read commands associated with controlling the end effector position
         # Check arm control deadman switch of LB
@@ -170,12 +172,6 @@ class JoystickControlNode(Node):
 
             self.joint_position_pub.publish(new_joint_positions)
 
-            # for idx, trans_mat in enumerate(self.j_utils.transformation_mats):
-            #     print("{} to {}".format(idx, idx+1))
-            #     sympy.pprint(trans_mat)
-            #     print()
-
-
             sympy.pprint(self.j_utils.final_trans_mat)
 
             print("Joint vels {}".format(self.current_joint_angle_vels))
@@ -187,39 +183,6 @@ class JoystickControlNode(Node):
             print("EE Position {}".format(ee_pos))
             print()
 
-            # ee_x, ee_y, ee_z = ee_pos[0], ee_pos[1], ee_pos[2]
-
-            # self.test_joint_angles.append(ee_pos)
-
-            # fig = plt.figure()
-            # ax = fig.add_subplot(projection='3d')
-            # ax.scatter(ee_x, ee_y, ee_z, c='blue')
-            # ax.set_title("X, Y, Z Position")
-            # ax.set_xlabel("X (m)")
-            # ax.set_ylabel("Y (m)")
-            # ax.set_zlabel("Z (m)")
-            # # ax.set_xlim((-.125, .125))
-            # # ax.set_ylim((0.2561, 0.4561))
-            # # ax.set_zlim((1.2, 1.45))
-            # plt.show()
-
-            # new_joint_vels = Float64MultiArray()
-
-            # vels = [float(round(vel, 4)) for vel in self.current_joint_angle_vels]
-            # new_joint_vels.data = vels
-
-            # self.velocities_pub.publish(new_joint_vels)
-            
-    
-
-        # self.velocities_pub.publish()
-
-
-        # new_joint_positions = Float64MultiArray()
-
-        # new_joint_positions.data = self.current_joint_states
-
-        # self.joint_position_pub.publish(new_joint_positions)
 
 
 def main(args=None):
