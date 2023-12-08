@@ -27,6 +27,7 @@ class TagDetectionNode(Node):
                             debug=0)
 
 
+        # Camera parameters pulled from the camera description topic
         self.cam_params = (554.3827128226441,  # fx
                     554.3827128226441,  # fy
                     320.5,  # cx
@@ -47,8 +48,9 @@ class TagDetectionNode(Node):
         self.img_pub = self.create_publisher(Image, "/task_img", 10)
 
         self.current_tag = 9999
+        self.previous_command = 9999
 
-        self.tag_commands = {0: "Full Scan",
+        self.tag_commands = {0: "Propellor Scan",
                              1: "Wing Scan",
                              2: "Tire Inspection",
                              9999: "Find Next Aircraft"}
@@ -96,10 +98,12 @@ class TagDetectionNode(Node):
                 best_tag = tag.tag_id
                 min_dist = z_dist
 
+        self.current_tag = best_tag
+
         # Display current instructions to user
         cv2.putText(
             cv_img,
-            self.tag_commands[best_tag],
+            "Current Task: {}".format(self.tag_commands[self.current_tag]),
             org=(
                 30,
                 30,
@@ -109,6 +113,24 @@ class TagDetectionNode(Node):
             thickness = 2,
             color=(0, 0, 255),
         )
+
+        # Display current instructions to user
+        cv2.putText(
+            cv_img,
+            "Previous Task: {}".format(self.tag_commands[self.previous_command]),
+            org=(
+                30,
+                440,
+            ),
+            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=1.2,
+            thickness = 2,
+            color=(0, 0, 255),
+        )
+
+        # Prevent find next aircraft from being the previous command
+        if not best_tag == 9999:
+            self.previous_command = best_tag
 
         # Convert to a ros img message and publish it
         ros_img = self.bridge.cv2_to_imgmsg(cv_img, encoding="passthrough")

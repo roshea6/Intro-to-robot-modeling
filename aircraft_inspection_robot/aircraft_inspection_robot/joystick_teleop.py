@@ -44,7 +44,7 @@ class JoystickControlNode(Node):
         self.joint_step_size = 0.1
         self.ee_vel_scale = 1.0
 
-        self.j_utils = JacobianUtils()
+        self.j_utils = JacobianUtils(damped_jacobian=True)
         self.j_utils.calculateInvJacobian()
 
         self.current_ee_pos = [0.0, 1.0287, 3.0099]
@@ -82,7 +82,7 @@ class JoystickControlNode(Node):
             # Extract right stick horizontal axis for rotation about the Z axis
             right_horiz = joy_msg.axes[3]
             if right_horiz < -self.joy_thresh or right_horiz > self.joy_thresh:
-                rot_vel = 2*self.vel_mul*right_horiz
+                rot_vel = 3*self.vel_mul*right_horiz
             else:
                 rot_vel = 0
 
@@ -144,7 +144,7 @@ class JoystickControlNode(Node):
             self.j_utils.calculateInvJacobian()
 
             # Calculate the new joint vels based on the end effector vel
-            self.current_joint_angle_vels = np.matmul(self.j_utils.damped_pseudo_inv_j, ee_vel)
+            self.current_joint_angle_vels = np.matmul(self.j_utils.pseudo_inv_j, ee_vel)
 
             new_joint_positions = Float64MultiArray()
 
@@ -209,7 +209,7 @@ class JoystickControlNode(Node):
             self.j_utils.calculateInvJacobian()
 
             # Calculate the new joint vels based on the end effector vel
-            self.current_joint_angle_vels = np.matmul(self.j_utils.damped_pseudo_inv_j, ee_vel)
+            self.current_joint_angle_vels = np.matmul(self.j_utils.pseudo_inv_j, ee_vel)
 
             new_joint_positions = Float64MultiArray()
 

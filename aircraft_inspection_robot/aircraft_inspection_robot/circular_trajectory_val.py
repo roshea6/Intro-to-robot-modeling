@@ -22,7 +22,7 @@ class ControlNode(Node):
         self.joint_position_pub = self.create_publisher(Float64MultiArray, '/position_controller/commands', 10)
         self.velocities_pub = self.create_publisher(Float64MultiArray, '/velocity_controller/commands', 10)
 
-        self.j_utils = JacobianUtils()
+        self.j_utils = JacobianUtils(damped_jacobian=False)
         self.j_utils.calculateInvJacobian()
 
         time_to_comp = 20 # seconds to complete the full circle
@@ -36,14 +36,6 @@ class ControlNode(Node):
 
 
     def runTrajectory(self):
-        # Define object for working with the jacobian and calculate the initial one for end effector position estimation
-        j_utils = JacobianUtils(use_symbols=False, display=False)
-
-        j_utils.calculateInvJacobian()
-
-        # sympy.pprint(j_utils.pseudo_inv_j)
-        # exit()
-
         # Whether to plot in  3D or 2D. 3D plot is very slow especially with high number of steps
         plot_3d = True
 
@@ -65,7 +57,7 @@ class ControlNode(Node):
         x_dot = 0
         z_dot = 0
 
-        offset_joint_angles = j_utils.init_theta_val_list
+        offset_joint_angles = self.j_utils.init_theta_val_list
         current_rel_joint_angles = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         joint_angle_vels = [0, 0, 0, 0, 0, 0]
 
@@ -75,7 +67,7 @@ class ControlNode(Node):
             time_diff = (stamp - last_stamp)
             
             # Grab the latest position of the end effector with respect to the base frame from the full i to n homogenous transformation matrix
-            latest_trans = j_utils.final_trans_mat
+            latest_trans = self.j_utils.final_trans_mat
             x_pos = latest_trans.row(0)[3]
             y_pos = latest_trans.row(1)[3]
             z_pos = latest_trans.row(2)[3]
@@ -97,26 +89,23 @@ class ControlNode(Node):
             
             # Build the 6x1 end effector state vector
             ee_vel_state = np.array([x_dot, y_dot, z_dot, 0, 0, 0]).transpose()
-            # print(j_utils.pseudo_inv_j.shape)
             
             # Find the joint angles based on the previous state and vel
             for idx, angle in enumerate(current_rel_joint_angles):
                 current_rel_joint_angles[idx] += joint_angle_vels[idx]*time_diff
 
             new_joint_angles = [float(offset_joint_angles[i] + current_rel_joint_angles[i]) for i in range(len(current_rel_joint_angles))]
-            # new_joint_angles = [float(val) for val in [math.pi, -math.pi/2, 0, math.pi/2, 0, 0]]
+            
             # Update the jacobian based on the new angles
-            j_utils.updateThetas(new_joint_angles)
-            j_utils.calculateInvJacobian()
+            self.j_utils.updateThetas(new_joint_angles)
+            self.j_utils.calculateInvJacobian()
             
             # Calculate the new joint vels based on the end effector vel
-            joint_angle_vels = np.matmul(j_utils.damped_pseudo_inv_j, ee_vel_state)
+            joint_angle_vels = np.matmul(self.j_utils.pseudo_inv_j, ee_vel_state)
             
             last_stamp = stamp
         
             new_joint_positions = Float64MultiArray()
-
-            # print(self.current_joint_angles)
 
             new_rel_joint_angles = [float(val) for val in current_rel_joint_angles]
 
@@ -126,16 +115,6 @@ class ControlNode(Node):
 
             self.joint_position_pub.publish(new_joint_positions)
 
-            # sympy.pprint(self.j_utils.final_trans_mat)
-
-            # print("Joint vels {}".format(self.current_joint_angle_vels))
-            # print("Relative arm angles {}".format(new_joint_angles))
-            # print("Internal arm angles {}".format(self.j_utils.theta_val_list))
-
-            # ee_pos = [self.j_utils.final_trans_mat.row(i)[3] for i in range(3)]
-
-            # print("EE Position {}".format(ee_pos))
-            # print()
 
         # Produce and display the plot
         if plot_3d:
@@ -164,7 +143,7 @@ class ControlNode(Node):
 
 def main(args=None):
     # Set to true to have the end effector perform a 3D tilted circular trajectory instead
-    trajectory_3d = True
+    trajectory_3d = False
     rclpy.init(args=args)
     node = ControlNode(use_y_vel=trajectory_3d)
     try:
