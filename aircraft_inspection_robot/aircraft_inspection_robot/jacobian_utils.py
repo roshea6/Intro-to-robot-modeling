@@ -52,6 +52,9 @@ class JacobianUtils():
         self.final_trans_mat = None
         
         self.pseudo_inv_j = None
+        self.damped_pseudo_inv_j = None
+        self.damping_factor = 0.5
+        self.identity_6 = sympy.Matrix(np.identity(6))
     
     # Calculates the intermediate i-1 to i homogenous transformation matrices, 0 to i, as well as the final 0 to n matrix
     def calculateTransMats(self):
@@ -161,16 +164,20 @@ class JacobianUtils():
         # Calculate the pseudo inverse of the jacobian so we can use it to calculate joint velocities
         # Check the determinant to see if we can use the normal inverse or if we need to use the pseudo inverse instead
         # psuedo_inv = jacobian.pinv()
-        det = round(jacobian.det(), 5)
-        if det == 0:
-            psuedo_inv = jacobian.pinv() #(jacobian.T*jacobian).inv()*jacobian.T 
-        else:
-            psuedo_inv = jacobian.inv()
+        # det = round(jacobian.det(), 5)
+        # if det == 0:
+        #     psuedo_inv = jacobian.pinv() #(jacobian.T*jacobian).inv()*jacobian.T 
+        # else:
+        #     psuedo_inv = jacobian.inv()
         # psuedo_inv = roundExpr(psuedo_inv, 5)
+
+        jacobian_T = jacobian.transpose()
+
+        self.damped_pseudo_inv_j = jacobian_T*(jacobian*jacobian_T + (self.damping_factor**2)*self.identity_6).inv()
 
         # sympy.pprint(jacobian)
         
-        self.pseudo_inv_j = psuedo_inv
+        # self.pseudo_inv_j = psuedo_inv
     
     # Updates the current joint angles so they can be used to calculate the jacobian at each time step
     def updateThetas(self, new_theta_val_list):
@@ -182,7 +189,7 @@ if __name__ == "__main__":
 
     j_utils.calculateInvJacobian()
 
-    sympy.pprint(j_utils.pseudo_inv_j)
+    sympy.pprint(j_utils.damped_pseudo_inv_j)
 
     # for idx, trans_mat in enumerate(j_utils.transformation_mats):
     #     print("{} to {}".format(idx, idx+1))

@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from aircraft_inspection_robot.jacobian_utils import JacobianUtils
 
 class ControlNode(Node):
-    def __init__(self):
+    def __init__(self, use_y_vel=False):
         super().__init__('control_node')
 
         # Publisher for arm joints
@@ -32,6 +32,8 @@ class ControlNode(Node):
         # Generate n timestamps between 0 and the end time
         self.timestamps = np.linspace(0, time_to_comp, self.num_steps)
 
+        self.use_y_vel = use_y_vel
+
 
     def runTrajectory(self):
         # Define object for working with the jacobian and calculate the initial one for end effector position estimation
@@ -46,7 +48,7 @@ class ControlNode(Node):
         plot_3d = True
 
         time_to_comp = 20 # seconds to complete the full circle
-        num_steps = 1000 # number of time samples to be taken during time to complete
+        num_steps = 2000 # number of time samples to be taken during time to complete
         print_every = 100 # Print current end effector position every n steps
 
         # Generate n timestamps between 0 and the end time
@@ -84,7 +86,10 @@ class ControlNode(Node):
             
             # Calculate the end effector x and z velocities from the parametric circle equation derivatives
             x_dot = -0.157*np.sin(math.pi/2 + .314*stamp)
-            y_dot = 0.157*np.cos(math.pi/2 + .314*stamp)
+            if self.use_y_vel:
+                y_dot = 0.157*np.cos(math.pi/2 + .314*stamp)
+            else:
+                y_dot = 0
             z_dot = 0.157*np.cos(math.pi/2 + .314*stamp)
             
             if (stamp_num + 1) % print_every == 0:
@@ -105,7 +110,7 @@ class ControlNode(Node):
             j_utils.calculateInvJacobian()
             
             # Calculate the new joint vels based on the end effector vel
-            joint_angle_vels = np.matmul(j_utils.pseudo_inv_j, ee_vel_state)
+            joint_angle_vels = np.matmul(j_utils.damped_pseudo_inv_j, ee_vel_state)
             
             last_stamp = stamp
         
@@ -158,8 +163,10 @@ class ControlNode(Node):
 
 
 def main(args=None):
+    # Set to true to have the end effector perform a 3D tilted circular trajectory instead
+    trajectory_3d = True
     rclpy.init(args=args)
-    node = ControlNode()
+    node = ControlNode(use_y_vel=trajectory_3d)
     try:
         node.runTrajectory()
     finally:

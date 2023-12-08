@@ -38,16 +38,17 @@ class JoystickControlNode(Node):
         self.velocities_pub = self.create_publisher(Float64MultiArray, '/velocity_controller/commands', 10)
 
         # Robot starts in the home configuration with all joints angles set to 0
-        self.current_joint_states = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        # self.current_joint_states = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         self.joint_limits = [(-3.14, 3.14), (-1.57, 1.57), (-1.57, 1.57), (-1.57, 1.57), (-3.14, 3.14)]
 
-        self.joint_step_size = 0.5
+        self.joint_step_size = 0.1
+        self.ee_vel_scale = 1.0
 
         self.j_utils = JacobianUtils()
         self.j_utils.calculateInvJacobian()
 
         self.current_ee_pos = [0.0, 1.0287, 3.0099]
-        self.current_ee_vel = [0.0, 0.0, 0.0, 0.0]
+        self.current_ee_vel = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         self.current_joint_angles = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] #self.j_utils.init_theta_val_list
         self.offset_joint_angles = self.j_utils.init_theta_val_list
         self.current_joint_angle_vels = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -104,43 +105,33 @@ class JoystickControlNode(Node):
             # Extract left stick vertical axis for Z axis movement of the end effector
             left_vert = joy_msg.axes[1]
             if left_vert < -self.joy_thresh or left_vert > self.joy_thresh:
-                self.current_ee_vel[2] = self.joint_step_size*left_vert
+                self.current_ee_vel[2] = self.ee_vel_scale*left_vert
             else:
                 self.current_ee_vel[2] = 0.0
 
             # Extract left stick horizontal axis for Y axis movement of the end effector
             left_horiz = joy_msg.axes[0] 
             if left_horiz < -self.joy_thresh or left_horiz > self.joy_thresh:
-                self.current_ee_vel[1] = self.joint_step_size*left_horiz
+                self.current_ee_vel[1] = self.ee_vel_scale*left_horiz
             else:
                 self.current_ee_vel[1] = 0.0
-
-            # Extract right stick horizontal axis for end effector rotation
-            right_horiz = joy_msg.axes[3]
-            if right_horiz < -self.joy_thresh or right_horiz > self.joy_thresh:
-                self.current_ee_vel[3] = self.joint_step_size*right_horiz
-            else:
-                self.current_ee_vel[3] = 0.0
 
             # Extract right stick vertical axis for end effector x movement
             right_vert = joy_msg.axes[4]
             if right_vert < -self.joy_thresh or right_vert > self.joy_thresh:
-                self.current_ee_vel[0] = 3*self.joint_step_size*right_vert
+                self.current_ee_vel[0] = self.ee_vel_scale*right_vert
             else:
                 self.current_ee_vel[0] = 0.0
 
             # Have to copy the values in a weird way so we don't alter the underlying matrix
             # TODO: Figure out a nicer way to do this
             ee_vel = [val for val in self.current_ee_vel]
-            ee_vel.extend([0.0, 0.0])
-            ee_vel = [-0.5, 0.0, -0.5, 0.0, 0.0, 0.0]
-            # print(ee_vel)
-            # ee_vel = np.array(ee_vel).transpose()
             print("Current ee vel {}".format(ee_vel))
 
             #  Find the joint angles based on the previous state and vel
             # TODO: Update time diff to be calculate time delta between runs
-            time_diff = 0.0001
+            time_diff = 0.05
+            joint_steps = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
             for idx, angle in enumerate(self.current_joint_angles):
                 self.current_joint_angles[idx] += self.current_joint_angle_vels[idx]*time_diff
 
@@ -152,18 +143,10 @@ class JoystickControlNode(Node):
             self.j_utils.updateThetas(new_internal_arm_angles)
             self.j_utils.calculateInvJacobian()
 
-            # sympy.pprint(self.j_utils.pseudo_inv_j)
-
-            # print(ee_vel)
-            
-            # print("Inverse Jacobian")
-            # sympy.pprint(self.j_utils.pseudo_inv_j)
             # Calculate the new joint vels based on the end effector vel
-            self.current_joint_angle_vels = np.matmul(self.j_utils.pseudo_inv_j, ee_vel)
+            self.current_joint_angle_vels = np.matmul(self.j_utils.damped_pseudo_inv_j, ee_vel)
 
             new_joint_positions = Float64MultiArray()
-
-            # print(self.current_joint_angles)
 
             new_joint_angles = [float(angle) for angle in self.current_joint_angles]
 
@@ -172,16 +155,79 @@ class JoystickControlNode(Node):
 
             self.joint_position_pub.publish(new_joint_positions)
 
-            sympy.pprint(self.j_utils.final_trans_mat)
+            ee_pos = [self.j_utils.final_trans_mat.row(i)[3] for i in range(3)]
 
-            print("Joint vels {}".format(self.current_joint_angle_vels))
-            print("Relative arm angles {}".format(new_joint_angles))
-            print("Internal arm angles {}".format(self.j_utils.theta_val_list))
+            print("EE Position {}".format(ee_pos))
+            print()
+
+        # Otherwise set all end effector translation vels to 0
+        else:
+            for i in range(3):
+                self.current_ee_vel[i] = 0
+
+        # Read commands associated with controlling the end effector position
+        # Check end effector rotation deadman switch of RT
+        if joy_msg.axes[5] < -self.joy_thresh:
+            # Extract left stick vertical axis for Z axis rotation of the end effector
+            left_vert = joy_msg.axes[1]
+            if left_vert < -self.joy_thresh or left_vert > self.joy_thresh:
+                self.current_ee_vel[3] = self.ee_vel_scale*left_vert
+            else:
+                self.current_ee_vel[3] = 0.0
+
+            # Extract left stick horizontal axis for Y axis rotation of the end effector
+            left_horiz = joy_msg.axes[0] 
+            if left_horiz < -self.joy_thresh or left_horiz > self.joy_thresh:
+                self.current_ee_vel[5] = self.ee_vel_scale*left_horiz
+            else:
+                self.current_ee_vel[5] = 0.0
+
+            # Extract right stick horizontal axis for end effector x rotation
+            right_horiz = joy_msg.axes[3]
+            if right_horiz < -self.joy_thresh or right_horiz > self.joy_thresh:
+                self.current_ee_vel[4] = self.ee_vel_scale*right_horiz
+            else:
+                self.current_ee_vel[4] = 0.0
+
+            # Have to copy the values in a weird way so we don't alter the underlying matrix
+            # TODO: Figure out a nicer way to do this
+            ee_vel = [val for val in self.current_ee_vel]
+            print("Current ee vel {}".format(ee_vel))
+
+            #  Find the joint angles based on the previous state and vel
+            # TODO: Update time diff to be calculate time delta between runs
+            time_diff = 0.05
+            for idx, angle in enumerate(self.current_joint_angles):
+                self.current_joint_angles[idx] += self.current_joint_angle_vels[idx]*time_diff
+
+            new_internal_arm_angles = [self.offset_joint_angles[i] + self.current_joint_angles[i] for i in range(len(self.current_joint_angles))]
+
+            print("Offset arm angles: {}".format(new_internal_arm_angles))
+
+            # Update the jacobian based on the new angles
+            self.j_utils.updateThetas(new_internal_arm_angles)
+            self.j_utils.calculateInvJacobian()
+
+            # Calculate the new joint vels based on the end effector vel
+            self.current_joint_angle_vels = np.matmul(self.j_utils.damped_pseudo_inv_j, ee_vel)
+
+            new_joint_positions = Float64MultiArray()
+
+            new_joint_angles = [float(angle) for angle in self.current_joint_angles]
+
+            print("New joint angles: {}".format(new_joint_angles))
+            new_joint_positions.data = new_joint_angles
+
+            self.joint_position_pub.publish(new_joint_positions)
 
             ee_pos = [self.j_utils.final_trans_mat.row(i)[3] for i in range(3)]
 
             print("EE Position {}".format(ee_pos))
             print()
+        # Otherwise set all end effector translation vels to 0
+        else:
+            for i in range(3):
+                self.current_ee_vel[i+3] = 0
 
 
 
