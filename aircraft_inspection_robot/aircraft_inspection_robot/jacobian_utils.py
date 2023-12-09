@@ -103,6 +103,12 @@ class JacobianUtils():
                 
             # Keep track of the 0 to i transformation matrices to be used later for jacobian calculations
             self.successive_trans_mats.append(res_mat)
+
+        if not self.evaluate_with_vars:
+            res_mat = roundMatrix(res_mat, 4)
+        
+        else: 
+            res_mat = roundExpr(res_mat, 4)
             
         self.final_trans_mat = res_mat
     
@@ -158,6 +164,7 @@ class JacobianUtils():
         jacobian = sympy.Matrix(np.array(jacobian_vecs).transpose())
 
         if self.display:
+            print("Jacobian")
             sympy.pprint(jacobian)
         
         if self.evaluate_with_vars:
@@ -187,11 +194,15 @@ class JacobianUtils():
 
 if __name__ == "__main__":
     # Define object for working with the jacobian and calculate the initial one for end effector position estimation
-    j_utils = JacobianUtils(use_symbols=False, display=False)
+    j_utils = JacobianUtils(use_symbols=False, display=True)
 
     j_utils.calculateInvJacobian()
 
-    sympy.pprint(j_utils.damped_pseudo_inv_j)
+    # sympy.pprint(j_utils.damped_pseudo_inv_j)
+
+    print()
+
+    sympy.pprint(j_utils.final_trans_mat)
 
     # for idx, trans_mat in enumerate(j_utils.transformation_mats):
     #     print("{} to {}".format(idx, idx+1))

@@ -22,11 +22,11 @@ class ControlNode(Node):
         self.joint_position_pub = self.create_publisher(Float64MultiArray, '/position_controller/commands', 10)
         self.velocities_pub = self.create_publisher(Float64MultiArray, '/velocity_controller/commands', 10)
 
-        self.j_utils = JacobianUtils(damped_jacobian=False)
+        self.j_utils = JacobianUtils(damped_jacobian=True)
         self.j_utils.calculateInvJacobian()
 
         time_to_comp = 20 # seconds to complete the full circle
-        self.num_steps = 2000 # number of time samples to be taken during time to complete
+        self.num_steps = 500 # number of time samples to be taken during time to complete
         self.current_step = 0
 
         # Generate n timestamps between 0 and the end time
@@ -40,7 +40,7 @@ class ControlNode(Node):
         plot_3d = True
 
         time_to_comp = 20 # seconds to complete the full circle
-        num_steps = 2000 # number of time samples to be taken during time to complete
+        num_steps = 500 # number of time samples to be taken during time to complete
         print_every = 100 # Print current end effector position every n steps
 
         # Generate n timestamps between 0 and the end time

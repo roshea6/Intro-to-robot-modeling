@@ -14,7 +14,7 @@
         xyz="-0.40974645535857 0.24834344494391 0.242010590101945"
         rpy="0 0 0" />
       <mass
-        value="3520.3239752391313" />
+        value="352.3239752391313" />
       <inertia
         ixx="0.952539519630922"
         ixy="-4.26200364814785E-05"
@@ -260,7 +260,7 @@
     name="front_left_wheel_joint"
     type="continuous">
     <origin
-      xyz="-0.117597527933808 0.63 0.10160911911045"
+      xyz="-0.117597527933808 0.67 0.10160911911045"
       rpy="1.57056878031369 -1.04143176730992 0.000196477434083904" />
     <parent
       link="base_link" />
@@ -369,7 +369,7 @@
     name="back_left_wheel_joint"
     type="continuous">
     <origin
-      xyz="-0.701797527935311 0.63 0.101609112969085"
+      xyz="-0.701797527935311 0.67 0.101609112969085"
       rpy="1.56727528936655 -1.5381898923507 0.00352290998991109" />
     <parent
       link="base_link" />
@@ -430,11 +430,6 @@
       link="arm_base_link" />
     <axis
       xyz="0 1 0" />
-    <pid>
-      <p>1.0</p>
-      <i>0.1</i>
-      <d>0.01</d>
-    </pid>
   </joint>
   <link
     name="arm_link_1">
@@ -488,11 +483,6 @@
       link="arm_link_1" />
     <axis
       xyz="0 0 -1" />
-    <pid>
-      <p>1.0</p>
-      <i>0.1</i>
-      <d>0.01</d>
-    </pid>
   </joint>
   <link
     name="arm_link_2">
@@ -546,11 +536,6 @@
       link="arm_link_2" />
     <axis
       xyz="0 0 -1" />
-    <pid>
-      <p>1.0</p>
-      <i>0.1</i>
-      <d>0.01</d>
-    </pid>
   </joint>
   <link
     name="arm_link_3">
@@ -604,11 +589,6 @@
       link="arm_link_3" />
     <axis
       xyz="0 0 1" />
-    <pid>
-      <p>1.0</p>
-      <i>0.1</i>
-      <d>0.01</d>
-    </pid>
   </joint>
   <link
     name="arm_link_4">
@@ -662,11 +642,6 @@
       link="arm_link_4" />
     <axis
       xyz="0 0 -1" />
-    <pid>
-      <p>1.0</p>
-      <i>0.1</i>
-      <d>0.01</d>
-    </pid>
   </joint>
   <link
     name="arm_link_5">
@@ -720,11 +695,6 @@
       link="arm_link_5" />
     <axis
       xyz="0 0 1" />
-    <pid>
-      <p>1.0</p>
-      <i>0.1</i>
-      <d>0.01</d>
-    </pid>
   </joint>
   <link
     name="camera_link">
@@ -733,7 +703,7 @@
         xyz="1.2060623173473 0.138272316836035 -0.00419630171526747"
         rpy="0 0 0" />
       <mass
-        value="67.6402187018761" />
+        value="6.76402187018761" />
       <inertia
         ixx="7.05925773573284"
         ixy="0.00160005295963165"
@@ -778,11 +748,6 @@
       link="camera_link" />
     <axis
       xyz="0 1 0" />
-    <pid>
-      <p>1.0</p>
-      <i>0.1</i>
-      <d>0.01</d>
-    </pid>
   </joint>
 
   <!-- <gazebo>

@@ -55,13 +55,6 @@ class JoystickControlNode(Node):
 
         self.test_joint_angles = []
 
-        time_to_comp = 20 # seconds to complete the full circle
-        self.num_steps = 2000 # number of time samples to be taken during time to complete
-        self.current_step = 0
-
-        # Generate n timestamps between 0 and the end time
-        self.timestamps = np.linspace(0, time_to_comp, self.num_steps)
-
         # Robot params for skid steering setup
         self.wheel_radius = 0.4562
         self.wheel_base = 0.73025
