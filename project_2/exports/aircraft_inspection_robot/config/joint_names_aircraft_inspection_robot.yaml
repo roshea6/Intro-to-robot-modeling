@@ -1,1 +1,0 @@
-controller_joint_names: ['', 'front_right_wheel_joint', 'front_left_wheel_joint', 'back_right_wheel_joint', 'back_left_wheel_joint', 'arm_base_joint', 'arm_link_1_joint', 'arm_link_2_joint', 'arm_link_3_joint', 'arm_link_4_joint', 'arm_link_5_joint', ]
