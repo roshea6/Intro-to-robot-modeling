@@ -24,7 +24,7 @@ class JacobianUtils():
         self.d_list = [0.2, 1.0, 0.0, 0.0]
         
         # Physical properties for dynamics
-        self.link_masses = [0, 24.32, 24.32, 24.32]
+        self.link_masses = [0, 12.92, 12.92, 12.92]
         # These are the relative center of masses for a link. Their position wrt to the robot base will be calculated at each timestep based on current joint angles
         self.link_cms = [[0.0, 0.0, 0.0],
                          [0.045, 0.045, 0.5],
@@ -41,7 +41,7 @@ class JacobianUtils():
         self.theta_list = [0, theta_1, theta_2, theta_3]
         
         # Small value in radians to be added to each of the starting thetas
-        max_espilon = 0.00004
+        max_espilon = 0.004
 
         # Calculated values for alphas and thetas in the home position of the robot
         self.alpha_val_list = [0, math.pi/2, 0, 0]
@@ -90,7 +90,7 @@ class JacobianUtils():
                         [0, sympy.sin(alpha), sympy.cos(alpha), d],
                         [0, 0, 0, 1]])
             
-            trans_mat = roundMatrix(trans_mat, 5)
+            # trans_mat = roundMatrix(trans_mat, 5)
             
             self.transformation_mats.append(trans_mat)
             
@@ -131,7 +131,7 @@ class JacobianUtils():
                             [0, sympy.sin(alpha), sympy.cos(alpha), d],
                             [0, 0, 0, 1]])
                 
-                trans_mat = roundExpr(trans_mat, 5)
+                # trans_mat = roundExpr(trans_mat, 5)
                 
                 self.var_transformation_mats.append(trans_mat)
                 
@@ -145,7 +145,7 @@ class JacobianUtils():
             for idx, trans_mat in enumerate(self.var_transformation_mats):
                 res_mat = res_mat*trans_mat
 
-                res_mat = roundExpr(res_mat, 5)
+                # res_mat = roundExpr(res_mat, 5)
                     
                 # Keep track of the 0 to i transformation matrices to be used later for jacobian calculations
                 self.var_successive_trans_mats.append(res_mat)
@@ -334,7 +334,7 @@ class JacobianUtils():
     
 
 # Define object for working with the jacobian and calculate the initial one for end effector position estimation
-j_utils = JacobianUtils(use_symbols=True, display=False)
+j_utils = JacobianUtils(use_symbols=False, display=False)
 
 j_utils.calculateInvJacobian()
 # j_utils.displayVarJacobian()
@@ -353,7 +353,7 @@ plot_3d = False
 plot_single_torque_graph = False
 
 time_to_comp = 20 # seconds to complete the full circle
-num_steps = 2000 # number of time samples to be taken during time to complete
+num_steps = 200 # number of time samples to be taken during time to complete
 print_every = 100 # Print current end effector position every n steps
 
 # Generate n timestamps between 0 and the end time
@@ -372,6 +372,8 @@ z_dot = 0
 
 joint_angles = j_utils.init_theta_val_list
 joint_angle_vels = [0, 0, 0, 0]
+offset_joint_angles = [0, 0, math.pi/4, -math.pi/4]
+joint_angle_list = [[], [], [], []]
 
 torque_list = [[], [], [], []]
 
@@ -382,6 +384,7 @@ for stamp_num, stamp in enumerate(timestamps):
     
     # Grab the latest position of the end effector with respect to the base frame from the full i to n homogenous transformation matrix
     latest_trans = j_utils.final_trans_mat
+    # sympy.pprint(latest_trans)
     x_pos = latest_trans.row(0)[3]
     y_pos = latest_trans.row(1)[3]
     z_pos = latest_trans.row(2)[3]
@@ -402,7 +405,7 @@ for stamp_num, stamp in enumerate(timestamps):
     # x_dot = -0.00314*np.sin(math.pi/2 + .0314*stamp)
     z_dot = -0.03535
     
-    if (stamp_num + 1) % print_every == 0:
+    if ((stamp_num + 1) % print_every == 0) or (stamp_num == 0):
         print("Idx: {} \t X: {} \t Y: {} \t Z: {}".format(stamp_num + 1, x_pos, y_pos, z_pos))
     
     # Build the 6x1 end effector state vector
@@ -413,9 +416,18 @@ for stamp_num, stamp in enumerate(timestamps):
     for idx, angle in enumerate(joint_angles):
         joint_angles[idx] += joint_angle_vels[idx]*time_diff
         
+        # Just for keeping track of the joint angles over time to plot
+        offset_joint_angles[idx] += joint_angle_vels[idx]*time_diff
+        
+    for angle_list, joint_angle in zip(joint_angle_list, offset_joint_angles):
+        angle_list.append(joint_angle)
+    
+        
     # Update the jacobian based on the new angles
     j_utils.updateThetas(joint_angles)
     j_utils.calculateInvJacobian()
+    
+    # print(joint_angles)
     
     # Calculate the new joint vels based on the end effector vel
     joint_angle_vels = np.matmul(j_utils.pseudo_inv_j, ee_vel_state)
@@ -442,6 +454,28 @@ else:
     plt.ylabel("Z (m)")
     # plt.xlim((-.125, .125))
     # plt.ylim((1.2, 1.45))
+    plt.show()
+    
+    # Iterable list of plot colors
+    plot_colors = iter(['b', 'g', 'r', 'c', 'm', 'y'])
+    joint_names = ["Fixed Base Joint", "Joint 1", "Joint 2", "Joint 3"]
+    
+    n_rows = 2
+    n_cols = 2
+    fig, ax = plt.subplots(nrows=n_rows, ncols=n_cols)
+    for idx, (offset_joint_angle_list, joint_name) in enumerate(zip(joint_angle_list, joint_names)):
+        # Calculates row and col number for each plot based on number of rows and cols
+        row_num = 0 if idx < n_rows else 1
+        col_num = idx - n_cols*row_num
+        print(row_num)
+        print(col_num)
+        ax[row_num, col_num].plot(timestamps, offset_joint_angle_list, label=joint_name, color=next(plot_colors))
+        ax[row_num, col_num].set_xlabel("Timestamp (s)")
+        ax[row_num, col_num].set_ylabel("Joint angle (degrees)")
+        ax[row_num, col_num].set_title(joint_name)
+        
+    fig.suptitle("Joint Angles Over Time")
+    fig.legend()
     plt.show()
     
     # joint_names = ["Joint 1", "Joint 2", "Joint 3"]
