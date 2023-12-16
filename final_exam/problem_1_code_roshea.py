@@ -48,7 +48,6 @@ class JacobianUtils():
         self.init_theta_val_list = [0, 0, math.pi + math.pi/4, 0 - math.pi/4]
         # Add a small epsilon to each starting angle to prevent large velocity jumps. Recommended by Saksham
         # self.init_theta_val_list = [val + max_espilon*random.uniform(-1, 1) for val in self.init_theta_val_list]
-        # self.init_theta_val_list = [0, 0, 0, 0, 0, 0]
         self.theta_val_list = self.init_theta_val_list
 
         # Set to true if you want the matrices to be displayed with thetas as a variable
@@ -427,7 +426,7 @@ for stamp_num, stamp in enumerate(timestamps):
     j_utils.updateThetas(joint_angles)
     j_utils.calculateInvJacobian()
     
-    # print(joint_angles)
+    print(joint_angles)
     
     # Calculate the new joint vels based on the end effector vel
     joint_angle_vels = np.matmul(j_utils.pseudo_inv_j, ee_vel_state)
@@ -467,8 +466,6 @@ else:
         # Calculates row and col number for each plot based on number of rows and cols
         row_num = 0 if idx < n_rows else 1
         col_num = idx - n_cols*row_num
-        print(row_num)
-        print(col_num)
         ax[row_num, col_num].plot(timestamps, offset_joint_angle_list, label=joint_name, color=next(plot_colors))
         ax[row_num, col_num].set_xlabel("Timestamp (s)")
         ax[row_num, col_num].set_ylabel("Joint angle (degrees)")
