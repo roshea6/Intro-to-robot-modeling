@@ -50,6 +50,9 @@ class JacobianUtils():
         # Add a small epsilon to each starting angle to prevent large velocity jumps. Recommended by Saksham
         # self.init_theta_val_list = [val + max_espilon*random.uniform(-1, 1) for val in self.init_theta_val_list]
         self.theta_val_list = self.init_theta_val_list
+        
+        self.joint_vels = []
+        self.joint_accels = []
 
         # Set to true if you want the matrices to be displayed with thetas as a variable
         self.evaluate_with_vars = use_symbols
@@ -63,6 +66,7 @@ class JacobianUtils():
         self.var_successive_trans_mats = []
         self.var_final_trans_mat = None
         
+        self.jacobian = None
         self.pseudo_inv_j = None
         self.jacobian_T = None
         
@@ -70,6 +74,12 @@ class JacobianUtils():
         
         # Used to setup the symbolic transformation matrices on the first run only
         self.first_run = True
+        
+        # Setup the inertia matrices for the different components
+        # Using soloid cuboid because I can't find one for a hollow version
+        self.inertia_matrices = [np.array([[(1/12)*mass*(0.09**2 + 1**2), 0, 0],
+                               [0, (1/12)*mass*(0.09**2 + 0.09**2), 0],
+                               [0, 0, (1/12)*mass*(0.09**2 + 1**2)]]) for mass in self.link_masses]
     
     # Calculates the intermediate i-1 to i homogenous transformation matrices, 0 to i, as well as the final 0 to n matrix
     def calculateTransMats(self):
@@ -201,10 +211,10 @@ class JacobianUtils():
             jacobian_vecs.append(j_vec)
             
         # Combine the individual vectors into a matrix to form the jacobian
-        jacobian = sympy.Matrix(np.array(jacobian_vecs).transpose())
+        self.jacobian = sympy.Matrix(np.array(jacobian_vecs).transpose())
 
         if self.display:
-            sympy.pprint(jacobian)
+            sympy.pprint(self.jacobian)
         # sympy.pprint(jacobian)
         
         # if self.evaluate_with_vars:
@@ -214,14 +224,14 @@ class JacobianUtils():
         # Check the determinant to see if we can use the normal inverse or if we need to use the pseudo inverse instead
         # det = round(jacobian.det(), 5)
         # if det == 0:
-        psuedo_inv = jacobian.pinv() #(jacobian.T*jacobian).inv()*jacobian.T 
+        psuedo_inv = self.jacobian.pinv() #(jacobian.T*jacobian).inv()*jacobian.T 
         # else:
         #     psuedo_inv = jacobian.inv()
         # psuedo_inv = roundExpr(psuedo_inv, 5)
         
         self.pseudo_inv_j = psuedo_inv
         
-        self.jacobian_T = jacobian.transpose()
+        # self.jacobian_T = jacobian.transpose()
         
     # Uses the most up to date transformation matrices and joint angles to calculate the jacobian matrix and its inverse
     def displayVarJacobian(self):
@@ -273,18 +283,20 @@ class JacobianUtils():
             
         # Combine the individual vectors into a matrix to form the jacobian
         jacobian = sympy.Matrix(np.array(jacobian_vecs).transpose())
+        
+        return jacobian
 
-        print("Analytical Jacobian")
-        sympy.pprint(jacobian)
+        # print("Analytical Jacobian")
+        # sympy.pprint(jacobian)
         
-        # Create a list of substitution pairs of the theta variable and the actual theta value
-        substitutions = [(theta_var, theta_val) for theta_var, theta_val in zip(self.theta_list, self.theta_val_list)]
-        eval_j = jacobian.subs(substitutions)
+        # # Create a list of substitution pairs of the theta variable and the actual theta value
+        # substitutions = [(theta_var, theta_val) for theta_var, theta_val in zip(self.theta_list, self.theta_val_list)]
+        # eval_j = jacobian.subs(substitutions)
         
-        eval_j = roundExpr(eval_j, 5)
+        # eval_j = roundExpr(eval_j, 5)
         
-        print("Jacobian at home position")
-        sympy.pprint(eval_j)
+        # print("Jacobian at home position")
+        # sympy.pprint(eval_j)
         
     
     # Updates the current joint angles so they can be used to calculate the jacobian at each time step
@@ -325,7 +337,32 @@ class JacobianUtils():
         self.gravity_mat = -pot_energy_partials.subs(substitutions)
         
         # sympy.pprint(self.gravity_mat)
+    
+    def calcKinEnergy(self):
+        symb_j = self.displayVarJacobian().T
         
+        total_kin_energy = 0
+        # sympy.pprint(symb_j)
+        num_vars = symb_j.shape[0]
+        
+        for idx in range(num_vars):
+            # Grab the link mass
+            mass = self.link_masses[idx]
+            
+            # Grab the link jacobian vector and split it into linear and angular vels
+            j_vec = symb_j.row(idx)
+            
+            jac_lin_vel = j_vec[0:3]
+            jac_ang_vel = j_vec[3:]
+            
+            # Grab the link rotation matrix from the var successive trans mats
+            
+            # Grab the inertia matrix
+            
+            # Somehow multiply them together so they come out as an nxn
+        
+        exit()
+        # Loop through each of the links and calculate their kinetic energy
     
     # Calculates the torque at each joint based on the gravity matrix, jacobian, and external force vector at the end effector
     def calcJointTorques(self):
@@ -337,6 +374,10 @@ class JacobianUtils():
 
 # Define object for working with the jacobian and calculate the initial one for end effector position estimation
 j_utils = JacobianUtils(use_symbols=True, display=False)
+
+j_utils.calcKinEnergy()
+
+exit()
 
 j_utils.calculateInvJacobian()
 # j_utils.displayVarJacobian()
