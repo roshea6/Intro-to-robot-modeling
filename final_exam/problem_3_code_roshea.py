@@ -5,17 +5,8 @@ from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 import random
 
-# Rounds values in sympy expressions. Found online 
-def roundExpr(expr, num_digits):
-    return expr.xreplace({n : round(n, num_digits) for n in expr.atoms(sympy.Number)})
-
 def deg2Rad(deg_angle):
     return (deg_angle * (math.pi/180))
-
-sympy.init_printing(num_columns=400)
-# Lambda function from Saksham to truncate values in a matrix
-# Removes the super small near zero values that result from floating point operations
-roundMatrix = lambda m, n: sympy.Matrix([[round(m[x, y], n) for y in range(m.shape[1])] for x in range(m.shape[0])])
 
 max_rot = math.pi/3
 slither_period = 60 # Time to complete one slither cycle in seconds
@@ -41,19 +32,16 @@ rot_directions = [1, 1, 1, 1, -1, -1, -1, 1, 1, 1]
 
 # Offsets added to each of the joint rotations to make rotation at a given joint more or less extreme
 # Essentially can be used to increase the amplitude of the waveform that the trajectory forms
-# Might not be needed
+# And to maintain the S like robot shape throughout the motion
 degree_offsets = [0, 15, 30, 15, 0, -15, -30, -15, 0, 15]
 # Redefine the offsets in radians. It's much easier to originally write it in degrees
 offsets = [deg2Rad(angle) for angle in degree_offsets]
-# offsets = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 joint_angles = [offset for offset in offsets]
 
 
 # Loop through the timestamps to find joint angles at each timestamp
 for stamp_num, stamp in enumerate(timestamps):
-    time_diff = (stamp - last_stamp)
-    
     # Record the current joint angles for a given timestamp so they can be plotted later
     for idx, angle in enumerate(joint_angles):
         joint_angle_list[idx].append(angle)
