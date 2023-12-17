@@ -24,21 +24,22 @@ class JacobianUtils():
         self.d_list = [0.2, 1.0, 0.0, 0.0]
         
         # Physical properties for dynamics
-        self.link_masses = [0, 12.92, 12.92, 12.92]
+        self.link_masses = [1.0, 12.92, 12.92, 12.92]
         # These are the relative center of masses for a link. Their position wrt to the robot base will be calculated at each timestep based on current joint angles
-        self.link_cms = [[0.0, 0.0, 0.0],
+        self.link_cms = [[0.1, 0.1, 0.1],
                          [0.045, 0.045, 0.5],
                          [0.5, 0.045, 0.045],
                          [-0.5, 0.045, 0.045]]
         
         # Create symbols for the the thetas so we can solve with variables
-        theta_1, theta_2, theta_3= sympy.symbols("theta_1, theta_2, theta_3")
+        theta_0, theta_1, theta_2, theta_3= sympy.symbols("theta_0, theta_1, theta_2, theta_3")
         
         # Define thetas as function of t
         # t = sympy.Symbol('t')
         # theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n = sympy.Function('theta_0')(t), sympy.Function('theta_1')(t), sympy.Function('theta_2')(t), sympy.Function('theta_3')(t), sympy.Function('theta_4')(t), sympy.Function('theta_5')(t), sympy.Function('theta_n')(t),
 
-        self.theta_list = [0, theta_1, theta_2, theta_3]
+        # Need to have a theta 0 var for the partial derivatives even though it never changes
+        self.theta_list = [theta_0, theta_1, theta_2, theta_3]
         
         # Small value in radians to be added to each of the starting thetas
         max_espilon = 0.004
@@ -306,6 +307,8 @@ class JacobianUtils():
             # Calculate potential energy for the link and add it to the total
             total_pot_energy += link_mass*(np.dot(g_vec, rci))
             
+        # print(total_pot_energy)
+            
         # Calculate the partial derivative of the potential enerty wrt each of the joint angles
         pot_energy_partials = sympy.Matrix([sympy.diff(total_pot_energy, var) for var in self.theta_list])
         
@@ -326,22 +329,27 @@ class JacobianUtils():
     
     # Calculates the torque at each joint based on the gravity matrix, jacobian, and external force vector at the end effector
     def calcJointTorques(self):
-        force_vec = sympy.Matrix(np.array([0.0, -5.0, 0.0, 0.0, 0.0, 0.0]).transpose())
+        force_vec = sympy.Matrix(np.array([-10.0, 0.0, 0.0, 0.0, 0.0, 0.0]).transpose())
         joint_torques = self.gravity_mat - self.jacobian_T*force_vec
         
         return joint_torques
     
 
 # Define object for working with the jacobian and calculate the initial one for end effector position estimation
-j_utils = JacobianUtils(use_symbols=False, display=False)
+j_utils = JacobianUtils(use_symbols=True, display=False)
 
 j_utils.calculateInvJacobian()
 # j_utils.displayVarJacobian()
 
-# for mat in j_utils.transformation_mats:
+# for idx, mat in enumerate(j_utils.successive_trans_mats):
+#     print("{} to {}".format(0, idx+1))
 #     sympy.pprint(mat)
     
-# sympy.pprint(j_utils.final_trans_mat)
+# for idx, mat in enumerate(j_utils.transformation_mats):
+#     print("{} to {}".format(idx, idx+1))
+#     sympy.pprint(mat)
+    
+# # sympy.pprint(j_utils.final_trans_mat)
     
 # exit()
 
@@ -393,12 +401,12 @@ for stamp_num, stamp in enumerate(timestamps):
     z_list.append(z_pos)
     
     # Calculate the system potential energy and gravity matrix
-    # j_utils.calcPotEnergy()
+    j_utils.calcPotEnergy()
     
     # Calculate the joint torques from the updated gravity matrix and record them
-    # torques = np.array(j_utils.calcJointTorques()).astype(np.float64)
-    # for joint_torque_list, torque in zip(torque_list, torques):
-    #     joint_torque_list.append(torque[0]) 
+    torques = np.array(j_utils.calcJointTorques()).astype(np.float64)
+    for joint_torque_list, torque in zip(torque_list, torques):
+        joint_torque_list.append(torque[0]) 
     
     # Calculate the end effector x and z velocities from the parametric circle equation derivatives
     # x_dot = -0.00314*np.sin(math.pi/2 + .0314*stamp)
@@ -426,10 +434,12 @@ for stamp_num, stamp in enumerate(timestamps):
     j_utils.updateThetas(joint_angles)
     j_utils.calculateInvJacobian()
     
-    print(joint_angles)
+    # print(joint_angles)
     
     # Calculate the new joint vels based on the end effector vel
     joint_angle_vels = np.matmul(j_utils.pseudo_inv_j, ee_vel_state)
+    
+    print(joint_angle_vels)
     
     last_stamp = stamp
     
@@ -475,35 +485,19 @@ else:
     fig.legend()
     plt.show()
     
-    # joint_names = ["Joint 1", "Joint 2", "Joint 3"]
-    # # Plot all the torques on a single graph
-    # if plot_single_torque_graph:
-    #     for single_torque_list, joint_name in zip(torque_list, joint_names):
-    #         plt.plot(timestamps, single_torque_list, label=joint_name)
+    # Redefine the color iterable so we don't run out of colors
+    plot_colors = iter(['b', 'g', 'r', 'c', 'm', 'y'])
+    fig, ax = plt.subplots(nrows=n_rows, ncols=n_cols)
+    for idx, (single_torque_list, joint_name) in enumerate(zip(torque_list, joint_names)):
+        # Calculates row and col number for each plot based on number of rows and cols
+        row_num = 0 if idx < n_rows else 1
+        col_num = idx - n_cols*row_num
+        ax[row_num, col_num].plot(timestamps, single_torque_list, label=joint_name, color=next(plot_colors))
+        ax[row_num, col_num].set_xlabel("Timestamp (s)")
+        ax[row_num, col_num].set_ylabel("Torque (N*m)")
+        ax[row_num, col_num].set_title(joint_name)
         
-    #     plt.title("Joint Torques Over Time") 
-    #     plt.xlabel("Timestamp (s)")
-    #     plt.ylabel("Torque (N*m)")
-    #     plt.legend()    
-        
-    #     plt.show()
-    # # Otherwise make six subplots and plot the torques separately
-    # else:
-    #     # Iterable list of plot colors
-    #     plot_colors = iter(['b', 'g', 'r', 'c', 'm', 'y'])
-        
-    #     n_rows = 2
-    #     n_cols = 3
-    #     fig, ax = plt.subplots(nrows=2, ncols=3)
-    #     for idx, (single_torque_list, joint_name) in enumerate(zip(torque_list, joint_names)):
-    #         # Calculates row and col number for each plot based on number of rows and cols
-    #         row_num = 0 if idx <= n_rows else 1
-    #         col_num = idx - n_cols*row_num
-    #         ax[row_num, col_num].plot(timestamps, single_torque_list, label=joint_name, color=next(plot_colors))
-    #         ax[row_num, col_num].set_xlabel("Timestamp (s)")
-    #         ax[row_num, col_num].set_ylabel("Torque (N*m)")
-    #         ax[row_num, col_num].set_title(joint_name)
-            
-    #     fig.suptitle("Joint Torques Over Time")
-    #     fig.legend()
-    #     plt.show()
+    fig.suptitle("Joint Torques Over Time")
+    fig.legend()
+    plt.show()
+    
