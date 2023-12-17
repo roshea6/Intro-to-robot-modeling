@@ -51,7 +51,7 @@ class JacobianUtils():
         # self.init_theta_val_list = [val + max_espilon*random.uniform(-1, 1) for val in self.init_theta_val_list]
         self.theta_val_list = self.init_theta_val_list
         
-        self.joint_vels = []
+        self.joint_vels = [0, 0, 0, 0.5]
         self.joint_accels = []
 
         # Set to true if you want the matrices to be displayed with thetas as a variable
@@ -76,8 +76,8 @@ class JacobianUtils():
         self.first_run = True
         
         # Setup the inertia matrices for the different components
-        # Using soloid cuboid because I can't find one for a hollow version
-        self.inertia_matrices = [np.array([[(1/12)*mass*(0.09**2 + 1**2), 0, 0],
+        # Using solid cuboid because I can't find one for a hollow version
+        self.inertia_tensors = [np.array([[(1/12)*mass*(0.09**2 + 1**2), 0, 0],
                                [0, (1/12)*mass*(0.09**2 + 0.09**2), 0],
                                [0, 0, (1/12)*mass*(0.09**2 + 1**2)]]) for mass in self.link_masses]
     
@@ -339,27 +339,55 @@ class JacobianUtils():
         # sympy.pprint(self.gravity_mat)
     
     def calcKinEnergy(self):
-        symb_j = self.displayVarJacobian().T
+        symb_j = self.displayVarJacobian()
         
         total_kin_energy = 0
         # sympy.pprint(symb_j)
-        num_vars = symb_j.shape[0]
+        num_vars = symb_j.shape[1]
+        
+        # D matrix of 0's so we can add to it with each iteration
+        D_mat = sympy.Matrix(np.zeros((4, 4)))
         
         for idx in range(num_vars):
             # Grab the link mass
             mass = self.link_masses[idx]
             
             # Grab the link jacobian vector and split it into linear and angular vels
-            j_vec = symb_j.row(idx)
+            # j_vec = symb_j.row(idx)
             
-            jac_lin_vel = j_vec[0:3]
-            jac_ang_vel = j_vec[3:]
+            # Build the linear and angular jacobian velocity pieces
+            jac_lin_vel = []
+            jac_ang_vel = []
+            for i in range(3):
+                # Manually extract the values out because sympy is being annoying about grabbing entire rows in a usable way
+                # AKA I can't figure out how to do it right now
+                jac_lin_vel.append([symb_j.row(i)[j] for j in range(4)])
+                jac_ang_vel.append([symb_j.row(i+3)[j] for j in range(4)])
+            
+            jac_lin_vel = sympy.Matrix(np.array(jac_lin_vel))
+            jac_ang_vel = sympy.Matrix(np.array(jac_ang_vel))
             
             # Grab the link rotation matrix from the var successive trans mats
+            trans_mat = self.var_successive_trans_mats[idx]
+            rot_mat = sympy.Matrix([trans_mat.row(0)[0:3],
+                       trans_mat.row(1)[0:3],
+                       trans_mat.row(2)[0:3]])
+            
             
             # Grab the inertia matrix
+            inertia_mat = sympy.Matrix(self.inertia_tensors[idx])
             
-            # Somehow multiply them together so they come out as an nxn
+            # Multiply the matrices together according to the kinetic energy equation
+            D_mat += mass*jac_lin_vel.T*jac_lin_vel + jac_ang_vel.T*rot_mat*inertia_mat*rot_mat.T*jac_ang_vel
+        
+        # Make the joint velocities into sympy matrices
+        mat_joint_vels = sympy.Matrix(np.array(self.joint_vels))
+        
+        # Perform the final K=1/2qdotT*D*qdot calculation
+        total_kin_energy = 0.5* mat_joint_vels.T*D_mat*mat_joint_vels
+        
+        sympy.pprint(total_kin_energy)
+        print(total_kin_energy.shape)
         
         exit()
         # Loop through each of the links and calculate their kinetic energy
@@ -479,6 +507,8 @@ for stamp_num, stamp in enumerate(timestamps):
     
     # Calculate the new joint vels based on the end effector vel
     joint_angle_vels = np.matmul(j_utils.pseudo_inv_j, ee_vel_state)
+    
+    j_utils.joint_vels = joint_angle_vels
     
     print(joint_angle_vels)
     
