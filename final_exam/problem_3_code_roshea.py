@@ -5,6 +5,8 @@ from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 import random
 
+# plt.rcParams.update({'font.size': 14})
+
 def deg2Rad(deg_angle):
     return (deg_angle * (math.pi/180))
 

@@ -5,6 +5,8 @@ from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 import random
 
+plt.rcParams.update({'font.size': 18})
+
 # Rounds values in sympy expressions. Found online 
 def roundExpr(expr, num_digits):
     return expr.xreplace({n : round(n, num_digits) for n in expr.atoms(sympy.Number)})
@@ -34,6 +36,11 @@ class JacobianUtils():
         # Create symbols for the the thetas so we can solve with variables
         theta_0, theta_1, theta_2, theta_3= sympy.symbols("theta_0, theta_1, theta_2, theta_3")
         
+         # Create symbols for the the theta dots so we can solve with variables
+        theta_0_dot, theta_1_dot, theta_2_dot, theta_3_dot= sympy.symbols("theta_0_dot, theta_1_dot, theta_2_dot, theta_3_dot")
+        
+        self.theta_dot_list = [theta_0_dot, theta_1_dot, theta_2_dot, theta_3_dot]
+        
         # Define thetas as function of t
         # t = sympy.Symbol('t')
         # theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n = sympy.Function('theta_0')(t), sympy.Function('theta_1')(t), sympy.Function('theta_2')(t), sympy.Function('theta_3')(t), sympy.Function('theta_4')(t), sympy.Function('theta_5')(t), sympy.Function('theta_n')(t),
@@ -51,7 +58,7 @@ class JacobianUtils():
         # self.init_theta_val_list = [val + max_espilon*random.uniform(-1, 1) for val in self.init_theta_val_list]
         self.theta_val_list = self.init_theta_val_list
         
-        self.joint_vels = [0, 0, 0, 0.5]
+        self.joint_vels = [0, 0, 0, 0.0]
         self.joint_accels = []
 
         # Set to true if you want the matrices to be displayed with thetas as a variable
@@ -70,6 +77,7 @@ class JacobianUtils():
         self.pseudo_inv_j = None
         self.jacobian_T = None
         
+        self.kinetic_energy = None
         self.gravity_mat = None
         
         # Used to setup the symbolic transformation matrices on the first run only
@@ -319,14 +327,13 @@ class JacobianUtils():
             # Calculate potential energy for the link and add it to the total
             total_pot_energy += link_mass*(np.dot(g_vec, rci))
             
-        # print(total_pot_energy)
             
         # Calculate the partial derivative of the potential enerty wrt each of the joint angles
-        pot_energy_partials = sympy.Matrix([sympy.diff(total_pot_energy, var) for var in self.theta_list])
+        pot_energy_partials = sympy.Matrix([total_pot_energy]) #sympy.Matrix([sympy.diff(total_pot_energy, var) for var in self.theta_list])
         
         
         if self.first_run:
-            sympy.pprint(roundExpr(pot_energy_partials, 4))
+            # sympy.pprint(roundExpr(pot_energy_partials, 4))
             self.first_run = False
         
         # Create a list of substitution pairs of the theta variable and the actual theta value
@@ -334,7 +341,7 @@ class JacobianUtils():
         
         # Substitute the values in to get the actualy value of the potential energy partial derivative matrix
         # Take its negative since the Lagrangian is K - P
-        self.gravity_mat = -pot_energy_partials.subs(substitutions)
+        self.gravity_mat = pot_energy_partials #.subs(substitutions)
         
         # sympy.pprint(self.gravity_mat)
     
@@ -381,21 +388,66 @@ class JacobianUtils():
             D_mat += mass*jac_lin_vel.T*jac_lin_vel + jac_ang_vel.T*rot_mat*inertia_mat*rot_mat.T*jac_ang_vel
         
         # Make the joint velocities into sympy matrices
-        mat_joint_vels = sympy.Matrix(np.array(self.joint_vels))
+        mat_joint_vels = sympy.Matrix(np.array(self.theta_dot_list))
         
         # Perform the final K=1/2qdotT*D*qdot calculation
         total_kin_energy = 0.5* mat_joint_vels.T*D_mat*mat_joint_vels
         
-        sympy.pprint(total_kin_energy)
-        print(total_kin_energy.shape)
+        self.kinetic_energy = total_kin_energy
         
-        exit()
-        # Loop through each of the links and calculate their kinetic energy
+    def calculateLagrangian(self):
+        pot_energy = self.gravity_mat
+        kin_energy = self.kinetic_energy
+        
+        lagrangian_function = kin_energy - pot_energy
+        
+        # Round the expression to remove all the near zero values
+        lagrangian_function = roundExpr(lagrangian_function, 4)
+        
+        # print(lagrangian_function)
+        
+        # Calculate the difference between the partial derivatives of the lagrangian wrt to q and q dot
+        q_diff = sympy.Matrix([sympy.diff(lagrangian_function, var) for var in self.theta_list])
+        q_dot_diff = sympy.Matrix([sympy.diff(lagrangian_function, var) for var in self.theta_dot_list])
+        
+        # Do we need to take another derivative wrt to time for q_dot_diff/ multiply by the time delta?
+        lagrangian = q_dot_diff - q_diff
+        
+        # Create extended lists pf the thetas and theta dots so we can substitute all at once
+        var_list = []
+        var_list.extend(self.theta_list)
+        var_list.extend(self.theta_dot_list)
+        val_list = []
+        val_list.extend(self.theta_val_list)
+        val_list.extend(self.joint_vels)
+        
+        # print(var_list)
+        # print(val_list)
+        
+        # sympy.pprint(lagrangian)
+        
+        # Create a list of substitution pairs of the theta variable and the actual theta value
+        substitutions = [(theta_var, theta_val) for theta_var, theta_val in zip(var_list, val_list)]
+        
+        # Substitute all of the theta and theta dot values into the expression
+        eval_lagrangian = lagrangian.subs(substitutions)
+        
+        return eval_lagrangian
     
     # Calculates the torque at each joint based on the gravity matrix, jacobian, and external force vector at the end effector
     def calcJointTorques(self):
+        # Get the latest values for the potential and kinetic energy of the system
+        self.calcPotEnergy()
+        self.calcKinEnergy()
+        
+        # Calculate the lagrangian
+        lagrangian = self.calculateLagrangian()
+        
+        # 10m in the -x direction of the base frame
         force_vec = sympy.Matrix(np.array([-10.0, 0.0, 0.0, 0.0, 0.0, 0.0]).transpose())
-        joint_torques = self.gravity_mat - self.jacobian_T*force_vec
+        
+        # Calculate the joint torques and return them
+        joint_torques = lagrangian - self.jacobian.T*force_vec
         
         return joint_torques
     
@@ -403,11 +455,9 @@ class JacobianUtils():
 # Define object for working with the jacobian and calculate the initial one for end effector position estimation
 j_utils = JacobianUtils(use_symbols=True, display=False)
 
-j_utils.calcKinEnergy()
-
-exit()
-
 j_utils.calculateInvJacobian()
+
+
 # j_utils.displayVarJacobian()
 
 # for idx, mat in enumerate(j_utils.successive_trans_mats):
@@ -422,15 +472,11 @@ j_utils.calculateInvJacobian()
     
 # exit()
 
-# Whether to plot in  3D or 2D. 3D plot is very slow especially with high number of steps
-plot_3d = False
-
-# If all the torques should be plotted on the same graph
-plot_single_torque_graph = False
-
 time_to_comp = 20 # seconds to complete the full circle
 num_steps = 200 # number of time samples to be taken during time to complete
 print_every = 100 # Print current end effector position every n steps
+
+calc_torques = False
 
 # Generate n timestamps between 0 and the end time
 timestamps = np.linspace(0, time_to_comp, num_steps)
@@ -469,11 +515,11 @@ for stamp_num, stamp in enumerate(timestamps):
     y_list.append(y_pos)
     z_list.append(z_pos)
     
-    # Calculate the system potential energy and gravity matrix
-    j_utils.calcPotEnergy()
-    
     # Calculate the joint torques from the updated gravity matrix and record them
-    torques = np.array(j_utils.calcJointTorques()).astype(np.float64)
+    if calc_torques:
+        torques = np.array(j_utils.calcJointTorques()).astype(np.float64)
+    else:
+        torques = [[0], [0], [0], [0]]
     for joint_torque_list, torque in zip(torque_list, torques):
         joint_torque_list.append(torque[0]) 
     
@@ -483,6 +529,7 @@ for stamp_num, stamp in enumerate(timestamps):
     
     if ((stamp_num + 1) % print_every == 0) or (stamp_num == 0):
         print("Idx: {} \t X: {} \t Y: {} \t Z: {}".format(stamp_num + 1, x_pos, y_pos, z_pos))
+        print(joint_angles)
     
     # Build the 6x1 end effector state vector
     ee_vel_state = np.array([0, 0, z_dot, 0, 0, 0]).transpose()
@@ -510,65 +557,50 @@ for stamp_num, stamp in enumerate(timestamps):
     
     j_utils.joint_vels = joint_angle_vels
     
-    print(joint_angle_vels)
-    
     last_stamp = stamp
     
 # Produce and display the plot
-if plot_3d:
-    fig = plt.figure()
-    ax = fig.add_subplot(projection='3d')
-    ax.scatter(x_list, y_list, z_list, c='blue')
-    ax.set_title("X, Y, Z Position")
-    ax.set_xlabel("X (m)")
-    ax.set_ylabel("Y (m)")
-    ax.set_zlabel("Z (m)")
-    ax.set_xlim((-.125, .125))
-    ax.set_ylim((0.2561, 0.4561))
-    ax.set_zlim((1.2, 1.45))
-    plt.show()
-else:
-    plt.plot(x_list, z_list, 'bo')
-    plt.title("X, Z Position")
-    plt.xlabel("X (m)")
-    plt.ylabel("Z (m)")
-    # plt.xlim((-.125, .125))
-    # plt.ylim((1.2, 1.45))
-    plt.show()
+plt.plot(x_list, z_list, 'bo')
+plt.title("X, Z Position")
+plt.xlabel("X (m)")
+plt.ylabel("Z (m)")
+# plt.xlim((-.125, .125))
+# plt.ylim((1.2, 1.45))
+plt.show()
+
+# Iterable list of plot colors
+plot_colors = iter(['b', 'g', 'r', 'c', 'm', 'y'])
+joint_names = ["Fixed Base Joint", "Joint 1", "Joint 2", "Joint 3"]
+
+n_rows = 2
+n_cols = 2
+fig, ax = plt.subplots(nrows=n_rows, ncols=n_cols)
+for idx, (offset_joint_angle_list, joint_name) in enumerate(zip(joint_angle_list, joint_names)):
+    # Calculates row and col number for each plot based on number of rows and cols
+    row_num = 0 if idx < n_rows else 1
+    col_num = idx - n_cols*row_num
+    ax[row_num, col_num].plot(timestamps, offset_joint_angle_list, label=joint_name, color=next(plot_colors))
+    ax[row_num, col_num].set_xlabel("Timestamp (s)")
+    ax[row_num, col_num].set_ylabel("Joint angle (radians)")
+    ax[row_num, col_num].set_title(joint_name)
     
-    # Iterable list of plot colors
-    plot_colors = iter(['b', 'g', 'r', 'c', 'm', 'y'])
-    joint_names = ["Fixed Base Joint", "Joint 1", "Joint 2", "Joint 3"]
+fig.suptitle("Joint Angles Over Time")
+fig.legend()
+plt.show()
+
+# Redefine the color iterable so we don't run out of colors
+plot_colors = iter(['b', 'g', 'r', 'c', 'm', 'y'])
+fig, ax = plt.subplots(nrows=n_rows, ncols=n_cols)
+for idx, (single_torque_list, joint_name) in enumerate(zip(torque_list, joint_names)):
+    # Calculates row and col number for each plot based on number of rows and cols
+    row_num = 0 if idx < n_rows else 1
+    col_num = idx - n_cols*row_num
+    ax[row_num, col_num].plot(timestamps, single_torque_list, label=joint_name, color=next(plot_colors))
+    ax[row_num, col_num].set_xlabel("Timestamp (s)")
+    ax[row_num, col_num].set_ylabel("Torque (N*m)")
+    ax[row_num, col_num].set_title(joint_name)
     
-    n_rows = 2
-    n_cols = 2
-    fig, ax = plt.subplots(nrows=n_rows, ncols=n_cols)
-    for idx, (offset_joint_angle_list, joint_name) in enumerate(zip(joint_angle_list, joint_names)):
-        # Calculates row and col number for each plot based on number of rows and cols
-        row_num = 0 if idx < n_rows else 1
-        col_num = idx - n_cols*row_num
-        ax[row_num, col_num].plot(timestamps, offset_joint_angle_list, label=joint_name, color=next(plot_colors))
-        ax[row_num, col_num].set_xlabel("Timestamp (s)")
-        ax[row_num, col_num].set_ylabel("Joint angle (degrees)")
-        ax[row_num, col_num].set_title(joint_name)
-        
-    fig.suptitle("Joint Angles Over Time")
-    fig.legend()
-    plt.show()
-    
-    # Redefine the color iterable so we don't run out of colors
-    plot_colors = iter(['b', 'g', 'r', 'c', 'm', 'y'])
-    fig, ax = plt.subplots(nrows=n_rows, ncols=n_cols)
-    for idx, (single_torque_list, joint_name) in enumerate(zip(torque_list, joint_names)):
-        # Calculates row and col number for each plot based on number of rows and cols
-        row_num = 0 if idx < n_rows else 1
-        col_num = idx - n_cols*row_num
-        ax[row_num, col_num].plot(timestamps, single_torque_list, label=joint_name, color=next(plot_colors))
-        ax[row_num, col_num].set_xlabel("Timestamp (s)")
-        ax[row_num, col_num].set_ylabel("Torque (N*m)")
-        ax[row_num, col_num].set_title(joint_name)
-        
-    fig.suptitle("Joint Torques Over Time")
-    fig.legend()
-    plt.show()
+fig.suptitle("Joint Torques Over Time")
+fig.legend()
+plt.show()
     
