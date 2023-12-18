@@ -22,43 +22,44 @@ roundMatrix = lambda m, n: sympy.Matrix([[round(m[x, y], n) for y in range(m.sha
 class JacobianUtils():
     def __init__(self, use_symbols=False, display=False):
         # Specity our list of known a and d values
-        self.a_list = [0.0, 0.0, -1.0, -1.0]
-        self.d_list = [0.2, 1.0, 0.0, 0.0]
+        self.a_list = [0.0, 0.0, -1.0, -1.0, -0.001]
+        self.d_list = [0.2, 1.0, 0.0, 0.0, 0.0]
         
         # Physical properties for dynamics
-        self.link_masses = [1.0, 12.92, 12.92, 12.92]
+        self.link_masses = [1.0, 12.92, 12.92, 12.92, 0.001]
         # These are the relative center of masses for a link. Their position wrt to the robot base will be calculated at each timestep based on current joint angles
         self.link_cms = [[0.1, 0.1, 0.1],
                          [0.045, 0.045, 0.5],
                          [0.5, 0.045, 0.045],
-                         [-0.5, 0.045, 0.045]]
+                         [-0.5, 0.045, 0.045],
+                         [-0.001, 0.001, 0.001]]
         
         # Create symbols for the the thetas so we can solve with variables
-        theta_0, theta_1, theta_2, theta_3= sympy.symbols("theta_0, theta_1, theta_2, theta_3")
+        theta_0, theta_1, theta_2, theta_3, theta_4 = sympy.symbols("theta_0, theta_1, theta_2, theta_3, theta_4")
         
          # Create symbols for the the theta dots so we can solve with variables
-        theta_0_dot, theta_1_dot, theta_2_dot, theta_3_dot= sympy.symbols("theta_0_dot, theta_1_dot, theta_2_dot, theta_3_dot")
+        theta_0_dot, theta_1_dot, theta_2_dot, theta_3_dot, theta_4_dot = sympy.symbols("theta_0_dot, theta_1_dot, theta_2_dot, theta_3_dot, theta_4_dot")
         
-        self.theta_dot_list = [theta_0_dot, theta_1_dot, theta_2_dot, theta_3_dot]
+        self.theta_dot_list = [theta_0_dot, theta_1_dot, theta_2_dot, theta_3_dot, theta_4_dot]
         
         # Define thetas as function of t
         # t = sympy.Symbol('t')
         # theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_n = sympy.Function('theta_0')(t), sympy.Function('theta_1')(t), sympy.Function('theta_2')(t), sympy.Function('theta_3')(t), sympy.Function('theta_4')(t), sympy.Function('theta_5')(t), sympy.Function('theta_n')(t),
 
         # Need to have a theta 0 var for the partial derivatives even though it never changes
-        self.theta_list = [theta_0, theta_1, theta_2, theta_3]
+        self.theta_list = [theta_0, theta_1, theta_2, theta_3, theta_4]
         
         # Small value in radians to be added to each of the starting thetas
         max_espilon = 0.004
 
         # Calculated values for alphas and thetas in the home position of the robot
-        self.alpha_val_list = [0, math.pi/2, 0, 0]
-        self.init_theta_val_list = [0, 0, math.pi + math.pi/4, 0 - math.pi/4]
+        self.alpha_val_list = [0, math.pi/2, 0, 0, 0]
+        self.init_theta_val_list = [0, 0, math.pi + math.pi/4, 0 - math.pi/4, 0]
         # Add a small epsilon to each starting angle to prevent large velocity jumps. Recommended by Saksham
         # self.init_theta_val_list = [val + max_espilon*random.uniform(-1, 1) for val in self.init_theta_val_list]
         self.theta_val_list = self.init_theta_val_list
         
-        self.joint_vels = [0, 0, 0, 0.0]
+        self.joint_vels = [0, 0, 0, 0, 0]
         self.joint_accels = []
 
         # Set to true if you want the matrices to be displayed with thetas as a variable
@@ -181,6 +182,7 @@ class JacobianUtils():
         # Grab the translation vector from the final transformation matrix for On
         On = [self.final_trans_mat.row(i)[3] for i in range(3)]
         
+        
         # sympy.pprint(self.successive_trans_mats)
 
         if self.display:
@@ -218,12 +220,18 @@ class JacobianUtils():
             
             jacobian_vecs.append(j_vec)
             
+        # for vec in jacobian_vecs:
+        #     print(vec)
+        # exit()
+            
         # Combine the individual vectors into a matrix to form the jacobian
         self.jacobian = sympy.Matrix(np.array(jacobian_vecs).transpose())
 
         if self.display:
             sympy.pprint(self.jacobian)
-        # sympy.pprint(jacobian)
+        # sympy.pprint(self.jacobian)
+        
+        # exit()
         
         # if self.evaluate_with_vars:
         #     continue
@@ -233,6 +241,7 @@ class JacobianUtils():
         # det = round(jacobian.det(), 5)
         # if det == 0:
         psuedo_inv = self.jacobian.pinv() #(jacobian.T*jacobian).inv()*jacobian.T 
+        
         # else:
         #     psuedo_inv = jacobian.inv()
         # psuedo_inv = roundExpr(psuedo_inv, 5)
@@ -353,7 +362,7 @@ class JacobianUtils():
         num_vars = symb_j.shape[1]
         
         # D matrix of 0's so we can add to it with each iteration
-        D_mat = sympy.Matrix(np.zeros((4, 4)))
+        D_mat = sympy.Matrix(np.zeros((5, 5)))
         
         for idx in range(num_vars):
             # Grab the link mass
@@ -368,8 +377,8 @@ class JacobianUtils():
             for i in range(3):
                 # Manually extract the values out because sympy is being annoying about grabbing entire rows in a usable way
                 # AKA I can't figure out how to do it right now
-                jac_lin_vel.append([symb_j.row(i)[j] for j in range(4)])
-                jac_ang_vel.append([symb_j.row(i+3)[j] for j in range(4)])
+                jac_lin_vel.append([symb_j.row(i)[j] for j in range(5)])
+                jac_ang_vel.append([symb_j.row(i+3)[j] for j in range(5)])
             
             jac_lin_vel = sympy.Matrix(np.array(jac_lin_vel))
             jac_ang_vel = sympy.Matrix(np.array(jac_ang_vel))
@@ -457,26 +466,25 @@ j_utils = JacobianUtils(use_symbols=True, display=False)
 
 j_utils.calculateInvJacobian()
 
-
 # j_utils.displayVarJacobian()
 
 # for idx, mat in enumerate(j_utils.successive_trans_mats):
 #     print("{} to {}".format(0, idx+1))
 #     sympy.pprint(mat)
     
-# for idx, mat in enumerate(j_utils.transformation_mats):
-#     print("{} to {}".format(idx, idx+1))
-#     sympy.pprint(mat)
+# # for idx, mat in enumerate(j_utils.transformation_mats):
+# #     print("{} to {}".format(idx, idx+1))
+# #     sympy.pprint(mat)
     
-# # sympy.pprint(j_utils.final_trans_mat)
+# sympy.pprint(j_utils.final_trans_mat)
     
 # exit()
 
 time_to_comp = 20 # seconds to complete the full circle
-num_steps = 200 # number of time samples to be taken during time to complete
-print_every = 100 # Print current end effector position every n steps
+num_steps = 30 # number of time samples to be taken during time to complete
+print_every = 10 # Print current end effector position every n steps
 
-calc_torques = False
+calc_torques = True
 
 # Generate n timestamps between 0 and the end time
 timestamps = np.linspace(0, time_to_comp, num_steps)
@@ -486,18 +494,23 @@ last_stamp = 0
 x_pos = 1.707
 y_pos = 0.0
 z_pos = 1.907
+ideal_z_pos = z_pos
 x_list = []
 y_list = []
 z_list = []
+ideal_x_list = []
+ideal_z_list = []
 x_dot = 0
 z_dot = 0
 
 joint_angles = j_utils.init_theta_val_list
-joint_angle_vels = [0, 0, 0, 0]
-offset_joint_angles = [0, 0, math.pi/4, -math.pi/4]
-joint_angle_list = [[], [], [], []]
+joint_angle_vels = [0, 0, 0, 0, 0]
+offset_joint_angles = [0, 0, math.pi/4, -math.pi/4, 0]
+joint_angle_list = [[], [], [], [], []]
 
 torque_list = [[], [], [], []]
+
+z_trav = 0
 
 # Loop through the timestamps to find the end effector velocity at each timestamp
 # Use the end effector velocity to calculate the joint angle velocities
@@ -527,9 +540,18 @@ for stamp_num, stamp in enumerate(timestamps):
     # x_dot = -0.00314*np.sin(math.pi/2 + .0314*stamp)
     z_dot = -0.03535
     
+    # print(time_diff)
+    
+    z_trav += abs(time_diff*z_dot)
+    
+    ideal_x_list.append(1.707)
+    ideal_z_pos += time_diff*z_dot
+    ideal_z_list.append(ideal_z_pos)
+    
     if ((stamp_num + 1) % print_every == 0) or (stamp_num == 0):
         print("Idx: {} \t X: {} \t Y: {} \t Z: {}".format(stamp_num + 1, x_pos, y_pos, z_pos))
-        print(joint_angles)
+        print("Current Joint angles: {}".format(joint_angles))
+    print(stamp_num)
     
     # Build the 6x1 end effector state vector
     ee_vel_state = np.array([0, 0, z_dot, 0, 0, 0]).transpose()
@@ -552,16 +574,31 @@ for stamp_num, stamp in enumerate(timestamps):
     
     # print(joint_angles)
     
+    # sympy.pprint(j_utils.pseudo_inv_j)
+    
     # Calculate the new joint vels based on the end effector vel
     joint_angle_vels = np.matmul(j_utils.pseudo_inv_j, ee_vel_state)
+    
+    # test_ee_vel = np.matmul(j_utils.jacobian, joint_angle_vels)
+    # print("EE vel: {}".format(test_ee_vel))
     
     j_utils.joint_vels = joint_angle_vels
     
     last_stamp = stamp
     
+    
 # Produce and display the plot
 plt.plot(x_list, z_list, 'bo')
-plt.title("X, Z Position")
+plt.title("True X, Z Position")
+plt.xlabel("X (m)")
+plt.ylabel("Z (m)")
+plt.xlim((1.65, 1.75))
+# plt.ylim((1.2, 1.45))
+plt.show()
+
+# Produce and display the plot
+plt.plot(ideal_x_list, ideal_z_list, 'bo')
+plt.title("Ideal X, Z Position")
 plt.xlabel("X (m)")
 plt.ylabel("Z (m)")
 # plt.xlim((-.125, .125))
